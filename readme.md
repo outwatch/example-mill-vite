@@ -5,14 +5,17 @@ A [github-template][github-template] for [outwatch](https://github.com/outwatch/
 Technologies used:
 - [Outwatch](https://github.com/outwatch/outwatch/) functional Web-Frontend Library
 - [Scala 3](https://www.scala-lang.org/) programming language, compiled to javascript using [ScalaJS](https://www.scala-js.org/)
-- [Mill](https://mill-build.com/mill/Intro_to_Mill.html) build tool
+- [Mill](https://mill-build.com) build tool
 - [Vite](https://vitejs.dev) fast frontend Hot reloading
 - [devbox](https://www.jetpack.io/devbox) for a reproducible dev environment
 - [direnv](https://direnv.net/) to automatically load dev environment when entering project directory
 
-# Getting Started
+## Getting Started
 
-1. Setup [devbox](https://www.jetpack.io/devbox) and [direnv](https://direnv.net/).
+1. Setup on your system:
+   - [devbox](https://www.jetpack.io/devbox)
+   - [direnv](https://direnv.net/)
+   If you don't want to spend the time to setup those, skip to the manual setup section.
 1. Clone the example
     ```shell
     # if you want to just get the template locally without creating a github repo:
@@ -28,11 +31,30 @@ Technologies used:
     ```shell
     direnv allow
     ```
-    Which will load [.envrc](.envrc).
+    Which will load [.envrc](.envrc) install the packages from [devbox.json](devbox.json).
 1. Start the dev server
     ```shell
     devbox services up
     ```
    The services are defined in [process-compose.yml](process-compose.yml).
 1. Point your browser to <http://localhost:5173>
-1. Edit [Main.scala](frontend/src/main/scala/frontend/Main.scala) to see live reloading
+1. Edit [Main.scala](frontend/src/main/scala/frontend/Main.scala) to see hot reloading
+
+## Manual Setup without devbox or direnv
+
+1. Install:
+    - [Mill](https://mill-build.com)
+    - [NodeJS](https://nodejs.org) (provides `npm`)
+1. Run:
+    ```shell
+    npm install
+
+    # for automatically recompiling Scala sources to Javascript
+    mill --watch frontend.jsModules
+
+    # in another terminal
+    # to start the devserver with hot reloading
+    npx vite dev
+    ```
+1. Point your browser to <http://localhost:5173>
+1. Edit [Main.scala](frontend/src/main/scala/frontend/Main.scala) to see hot reloading
