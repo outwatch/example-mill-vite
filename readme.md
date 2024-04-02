@@ -16,6 +16,7 @@ Technologies used:
 1. Setup on your system:
    - [devbox](https://www.jetpack.io/devbox)
    - [direnv](https://direnv.net/)
+
    If you don't want to spend the time to setup those, skip to the manual setup section.
 1. Clone the example
     ```shell
