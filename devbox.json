@@ -1,6 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/jetpack-io/devbox/0.10.1/.schema/devbox.schema.json",
   "packages": [
-    "mill@latest"
+    "mill@latest",
+    "nodejs@latest"
   ]
 }
