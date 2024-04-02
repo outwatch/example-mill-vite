@@ -1,0 +1,15 @@
+processes:
+
+  npmInstall:
+    command: npm install
+
+  vite-devserver:
+    dependsOn:
+       npmInstall:
+          condition: process_completed_successfully
+    command: npx vite dev
+    ports:
+      - 5173:5173
+
+  scalajs-devbuild:
+    command: mill --watch frontend.jsModules

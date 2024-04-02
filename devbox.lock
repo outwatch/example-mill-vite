@@ -1,0 +1,53 @@
+{
+  "lockfile_version": "1",
+  "packages": {
+    "mill@latest": {
+      "last_modified": "2024-03-22T11:26:23Z",
+      "resolved": "github:NixOS/nixpkgs/a3ed7406349a9335cb4c2a71369b697cecd9d351#mill",
+      "source": "devbox-search",
+      "version": "0.11.7",
+      "systems": {
+        "aarch64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/9134mgynkr86iy3dkn288hjdlqm6kn9k-mill-0.11.7",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/9134mgynkr86iy3dkn288hjdlqm6kn9k-mill-0.11.7"
+        },
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/kvz5jsfagw9lm1q1c5jqxs3xqnf6j59p-mill-0.11.7",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/kvz5jsfagw9lm1q1c5jqxs3xqnf6j59p-mill-0.11.7"
+        },
+        "x86_64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/cnfymcrzxzz561zrpbp48q3crckw5w5w-mill-0.11.7",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/cnfymcrzxzz561zrpbp48q3crckw5w5w-mill-0.11.7"
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/g1fkvgmac7a4f1kr9jambf0d1g8cfzl1-mill-0.11.7",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/g1fkvgmac7a4f1kr9jambf0d1g8cfzl1-mill-0.11.7"
+        }
+      }
+    }
+  }
+}
