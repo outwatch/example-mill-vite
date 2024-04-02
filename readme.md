@@ -3,12 +3,13 @@
 A [github-template][github-template] for [outwatch](https://github.com/outwatch/outwatch).
 
 Technologies used:
-- [Outwatch](https://github.com/outwatch/outwatch/) functional Web-Frontend Library
+- [Outwatch](https://github.com/outwatch/outwatch/) functional web-frontend library
 - [Scala 3](https://www.scala-lang.org/) programming language, compiled to javascript using [ScalaJS](https://www.scala-js.org/)
 - [Mill](https://mill-build.com) build tool
-- [Vite](https://vitejs.dev) fast frontend Hot reloading
+- [Vite](https://vitejs.dev) fast frontend hot reloading
 - [devbox](https://www.jetpack.io/devbox) for a reproducible dev environment
 - [direnv](https://direnv.net/) to automatically load dev environment when entering project directory
+
 
 ## Getting Started
 
@@ -38,7 +39,8 @@ Technologies used:
     ```
    The services are defined in [process-compose.yml](process-compose.yml).
 1. Point your browser to <http://localhost:5173>
-1. Edit [Main.scala](frontend/src/main/scala/frontend/Main.scala) to see hot reloading
+1. Edit [Main.scala](frontend/src/main/scala/frontend/Main.scala) to see hot reloading.
+
 
 ## Manual Setup without devbox or direnv
 
@@ -57,4 +59,4 @@ Technologies used:
     npx vite dev
     ```
 1. Point your browser to <http://localhost:5173>
-1. Edit [Main.scala](frontend/src/main/scala/frontend/Main.scala) to see hot reloading
+1. Edit [Main.scala](frontend/src/main/scala/frontend/Main.scala) to see hot reloading.
