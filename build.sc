@@ -13,6 +13,9 @@ object app extends RootModule {
     def moduleSplitStyle = ModuleSplitStyle.SmallModulesFor(List("frontend"))
 
     def jsModules = T {
+      // copy node_modules and javascript files into the same directory,
+      // so that vite can resolve them.
+      // See the import in main.js
       os.copy(fastLinkJS().dest.path, T.dest, mergeFolders = true)
       os.copy(npmInstall().path, T.dest, mergeFolders = true)
       PathRef(T.dest)
