@@ -28,11 +28,11 @@ Technologies used:
     ```shell
     direnv allow
     ```
-    Which will load <.envrc>.
+    Which will load [.envrc](.envrc).
 1. Start the dev server
     ```shell
     devbox services up
     ```
-   The services are defined in <process-compose.yml>.
+   The services are defined in [process-compose.yml](process-compose.yml).
 1. Point your browser to <http://localhost:5173>
-1. Edit <frontend/src/main/scala/frontend/Main.scala> to see live reloading
+1. Edit [Main.scala](frontend/src/main/scala/frontend/Main.scala) to see live reloading
