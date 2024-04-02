@@ -4,11 +4,11 @@ import outwatch._
 import outwatch.dsl._
 import cats.effect.SyncIO
 
-object Main {
-  def main(args: Array[String]): Unit = {
+// Outwatch documentation: https://outwatch.github.io/docs/readme.html
 
-    val myComponent = div("Hello World")
+@main def main() = {
+  val myComponent = div("Hello World")
 
-    Outwatch.renderReplace[SyncIO]("#app", myComponent).unsafeRunSync()
-  }
+  // render the component into the <div id="app"></div> in index.html
+  Outwatch.renderReplace[SyncIO]("#app", myComponent).unsafeRunSync()
 }
