@@ -1,0 +1,20 @@
+services:
+  authn:
+    image: keratin/authn-server:1.19.0
+    ports:
+      - "3000:3000"
+      - "3001:3001"
+    volumes:
+      - authn-data:/data
+    environment:
+      APP_DOMAINS: "localhost"
+      AUTHN_URL: "http://localhost:3000"
+      PORT: 3001
+      PUBLIC_PORT: 3000
+      SECRET_KEY_BASE: "test"
+      DATABASE_URL: "sqlite3://localhost//data/authn.db"
+    command: |
+      sh -c "./authn migrate && ./authn server"
+
+volumes:
+  authn-data:

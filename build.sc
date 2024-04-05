@@ -14,7 +14,11 @@ object app extends RootModule {
     def moduleSplitStyle = ModuleSplitStyle.SmallModulesFor(List("frontend"))
 
     def ivyDeps = Agg(
-      ivy"io.github.outwatch::outwatch::1.0.0"
+      ivy"io.github.outwatch::outwatch::1.0.0",
+      ivy"com.github.cornerman::keratin-authn-frontend::0.1.2",
+      ivy"org.typelevel::cats-effect::3.5.4",
+      ivy"com.github.rssh::dotty-cps-async::0.9.21",
+      ivy"com.github.rssh::cps-async-connect-cats-effect::0.9.21"
     )
   }
 }
