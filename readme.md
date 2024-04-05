@@ -1,6 +1,6 @@
 # Outwatch Frontend Example
 
-A [github-template][github-template] for [outwatch](https://github.com/outwatch/outwatch).
+A [github-template](https://docs.github.com/en/repositories/creating-and-managing-repositories/creating-a-template-repository) for [outwatch](https://github.com/outwatch/outwatch).
 
 Technologies used:
 - [Outwatch](https://github.com/outwatch/outwatch/) functional web-frontend library
