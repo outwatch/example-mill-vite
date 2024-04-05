@@ -4,5 +4,8 @@
   "version": "0.0.0",
   "devDependencies": {
     "vite": "^5.2.7"
+  },
+  "dependencies": {
+    "snabbdom": "github:outwatch/snabbdom.git#semver:0.7.5"
   }
 }

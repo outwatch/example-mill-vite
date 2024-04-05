@@ -1,25 +1,17 @@
 import mill._, scalalib._, scalajslib._
-import $ivy.`io.github.nafg.millbundler::jsdeps::0.2.0`, io.github.nafg.millbundler.jsdeps._
+import $ivy.`io.github.nafg.millbundler::jsdeps::0.2.0`,
+  io.github.nafg.millbundler.jsdeps._
 
 import mill.scalajslib._
 import mill.scalajslib.api._
 
 object app extends RootModule {
-  object frontend extends ScalaJSNpmModule {
+  object frontend extends ScalaJSModule {
     def scalaVersion = "3.4.1"
     def scalaJSVersion = "1.16.0"
 
     def moduleKind = ModuleKind.ESModule
     def moduleSplitStyle = ModuleSplitStyle.SmallModulesFor(List("frontend"))
-
-    def jsModules = T {
-      // copy node_modules and javascript files into the same directory,
-      // so that vite can resolve them.
-      // See the import in main.js
-      os.copy(fastLinkJS().dest.path, T.dest, mergeFolders = true)
-      os.copy(npmInstall().path, T.dest, mergeFolders = true)
-      PathRef(T.dest)
-    }
 
     def ivyDeps = Agg(
       ivy"io.github.outwatch::outwatch::1.0.0"
