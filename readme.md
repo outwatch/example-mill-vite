@@ -6,7 +6,7 @@ Technologies used:
 - [Outwatch](https://github.com/outwatch/outwatch/) functional web-frontend library
 - [Scala 3](https://www.scala-lang.org/) programming language, compiled to javascript using [ScalaJS](https://www.scala-js.org/)
 - [Mill](https://mill-build.com) build tool
-- [Vite](https://vitejs.dev) fast frontend hot reloading
+- [Vite](https://vitejs.dev) hot reloading and bundling
 - [devbox](https://www.jetpack.io/devbox) for a reproducible dev environment
 - [direnv](https://direnv.net/) to automatically load dev environment when entering project directory
 
@@ -33,7 +33,7 @@ Technologies used:
     ```shell
     direnv allow
     ```
-    Which will load [.envrc](.envrc) install the packages from [devbox.json](devbox.json).
+    Which will load [.envrc](.envrc) and install the packages from [devbox.json](devbox.json).
 1. Start the dev server
     ```shell
     devbox services up
