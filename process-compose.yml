@@ -12,4 +12,4 @@ processes:
       - 5173:5173
 
   scalajs-devbuild:
-    command: mill --watch frontend.jsModules
+    command: mill --watch frontend.fastLinkJS
