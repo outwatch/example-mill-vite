@@ -1,15 +1,17 @@
+environment:
+  - "FORCE_COLOR=1"
 processes:
 
   npmInstall:
-    command: npm install
+    command: npm install --color=always
 
-  vite-devserver:
-    dependsOn:
-       npmInstall:
-          condition: process_completed_successfully
+  vite-dev:
     command: npx vite dev
     ports:
       - 5173:5173
+    dependsOn:
+       npmInstall:
+          condition: process_completed_successfully
 
-  scalajs-devbuild:
-    command: mill --watch frontend.fastLinkJS
+  mill-watch:
+    command: mill --color true --watch frontend.fastLinkJS
