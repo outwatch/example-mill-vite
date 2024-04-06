@@ -2,16 +2,27 @@ environment:
   - "FORCE_COLOR=1"
 processes:
 
-  npmInstall:
+  npm-install:
     command: npm install --color=always
+
+  mill-build:
+    # initial mill build, so that vite finds the js files referenced in main.js
+    command: mill --color true frontend.fastLinkJS
 
   vite-dev:
     command: npx vite dev --port 5173 --strictPort
     ports:
       - 5173:5173
-    dependsOn:
-       npmInstall:
-          condition: process_completed_successfully
+    depends_on:
+      npm-install:
+        condition: process_completed_successfully
+      mill-build:
+        # vite should start, even if the initial build failed
+        condition: process_completed
 
   mill-watch:
     command: mill --color true --watch frontend.fastLinkJS
+    depends_on:
+      mill-build:
+        # watch should start, even if the initial build failed
+        condition: process_completed
