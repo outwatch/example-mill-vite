@@ -43,8 +43,16 @@ Technologies used:
 1. Edit [FrontendMain.scala](frontend/src/main/scala/frontend/FrontendMain.scala) to see hot reloading.
 1. Production build:
    ```shell
-   mill frontend.fullLinkJS && npx vite build
+   # compile frontend 
+   mill frontend.fullLinkJS
+
+   # bundle frontend to /dist
+   npx vite build
+
+   # run backend and serve /dist
+   mill backend.run
    ```
+   Point your browser to <http://localhost:8080>
 
 
 ## Manual Setup without devbox or direnv
