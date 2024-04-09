@@ -1,5 +1,6 @@
 import mill._, scalalib._, scalajslib._
 import $ivy.`io.github.nafg.millbundler::jsdeps::0.2.0`, io.github.nafg.millbundler.jsdeps._
+import $ivy.`com.github.cornerman::mill-quillcodegen:0.1.5+3-28f2a859+20240409-2015-SNAPSHOT`, quillcodegen.plugin.QuillCodegenModule
 
 import mill.scalajslib._
 import mill.scalajslib.api._
@@ -31,9 +32,25 @@ object frontend extends AppScalaJSModule {
   )
 }
 
-object backend extends AppScalaModule {
+object backend extends AppScalaModule with QuillCodegenModule {
+  def quillcodegenJdbcUrl       = "jdbc:sqlite:data_codegen.db"
+  def quillcodegenPackagePrefix = "dbtypes"
+  def quillcodegenSetupTask = T.task {
+    val dbpath = quillcodegenJdbcUrl.stripPrefix("jdbc:sqlite:")
+    os.remove(os.pwd / dbpath)
+    executeSqlFile(PathRef(os.pwd / "schema.sql"))
+  }
+
+// scalacOptions ++= Seq(
+//     // TODO: https://github.com/zio/zio-quill/issues/2639
+//     "-Wconf:msg=Questionable row-class found:s"
+//   ),
+
   def moduleDeps = Seq(rpc.jvm)
   def ivyDeps = super.ivyDeps() ++ Agg(
+    ivy"org.xerial:sqlite-jdbc::3.44.1.0",
+    ivy"io.getquill::quill-doobie::4.8.1",
+    ivy"org.tpolecat::doobie-core::1.0.0-RC5",
     ivy"com.github.cornerman::sloth::0.7.1",
     ivy"com.github.rssh::dotty-cps-async::0.9.21",
     ivy"com.github.rssh::cps-async-connect-cats-effect::0.9.21",

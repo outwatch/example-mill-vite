@@ -23,10 +23,32 @@ import org.http4s.*
 import http4sJsoniter.ArrayEntityCodec.*
 import org.http4s.headers.`Content-Type`
 
+import doobie.util.transactor.Transactor
+import doobie.ConnectionIO
+import doobie.implicits._
+import io.getquill._
+import dbtypes.schema.*
+import dbtypes.schema.SchemaExtensions.*
+import cats.implicits.*
+
 object BackendMain extends IOApp.Simple {
   def run = async[IO] {
     val appConfig = AppConfig.fromEnv()
+
+    await(Woo.woo)
+
     await(HttpServer.start(appConfig))
+  }
+}
+
+object Woo {
+  val ctx = doobie.DoobieContext.SQLite(Literal)
+  import ctx._
+  def woo = async[IO] {
+
+    val xa                           = Transactor.fromDriverManager[IO]("org.sqlite.JDBC", "jdbc:sqlite:data.db?foreign_keys=ON", None)
+    val queryRun: ConnectionIO[Unit] = run(FooDao.query).map(println(_))
+    await(queryRun.transact(xa))
   }
 }
 
