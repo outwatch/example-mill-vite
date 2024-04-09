@@ -25,7 +25,8 @@ import org.http4s.headers.`Content-Type`
 
 object BackendMain extends IOApp.Simple {
   def run = async[IO] {
-    await(HttpServer.start())
+    val appConfig = AppConfig.fromEnv()
+    await(HttpServer.start(appConfig))
   }
 }
 
@@ -34,8 +35,10 @@ object RpcApiImpl extends rpc.RpcApi {
 }
 
 object HttpServer {
-  def start(): IO[Unit] = asyncScope[IO] {
-    val routes = ServerRoutes.all()
+  def start(config: AppConfig): IO[Unit] = asyncScope[IO] {
+    val routes = ServerRoutes.fileRoutes(config) <+>
+//        infoRoutes(state) <+>
+      ServerRoutes.slothRpcRoutes()
 
     val _ = await(
       EmberServerBuilder
@@ -51,16 +54,23 @@ object HttpServer {
   }
 }
 
+case class AppConfig(
+  // authnUrl: String,
+  frontendDistributionPath: String
+)
+
+object AppConfig {
+  def fromEnv(): AppConfig = AppConfig(
+    // authnUrl = sys.env("AUTHN_URL"),
+    frontendDistributionPath = sys.env("FRONTEND_DISTRIBUTION_PATH")
+  )
+}
+
 object ServerRoutes {
   private val dsl = Http4sDsl[IO]
   import dsl.*
 
-  def all(): HttpRoutes[IO] =
-//      fileRoutes(state) <+>
-//        infoRoutes(state) <+>
-    slothRpcRoutes()
-
-  private def slothRpcRoutes(): HttpRoutes[IO] = {
+  def slothRpcRoutes(): HttpRoutes[IO] = {
     import chameleon.{Deserializer, Serializer}
     import chameleon.ext.jsoniter.given
     import sloth.{Router, ServerFailure}
@@ -81,14 +91,14 @@ object ServerRoutes {
     }
   }
 
-  // private def fileRoutes(state: ServerState): HttpRoutes[IO] = {
-  //   fileService[IO](
-  //     FileService.Config(
-  //       systemPath = state.config.frontendDistributionPath,
-  //       cacheStrategy = MemoryCache[IO]()
-  //     )
-  //   )
-  // }
+  def fileRoutes(config: AppConfig): HttpRoutes[IO] = {
+    fileService[IO](
+      FileService.Config(
+        systemPath = config.frontendDistributionPath,
+        cacheStrategy = MemoryCache[IO](),
+      )
+    )
+  }
 
   // private def infoRoutes(state: ServerState): HttpRoutes[IO] = {
   //   def appConfig = AppConfig(

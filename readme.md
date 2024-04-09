@@ -41,10 +41,18 @@ Technologies used:
    The services are defined in [process-compose.yml](process-compose.yml).
 1. Point your browser to <http://localhost:5173>
 1. Edit [Main.scala](frontend/src/main/scala/frontend/Main.scala) to see hot reloading.
-1. Production build:
+1. Production build & run:
    ```shell
-   mill frontend.fullLinkJS && npx vite build
+   # compile frontend 
+   mill frontend.fullLinkJS
+
+   # bundle frontend to /dist
+   npx vite build
+
+   # run backend and serve /dist
+   mill backend.run
    ```
+   Point your browser to <http://localhost:8080>
 
 
 ## Manual Setup without devbox or direnv
