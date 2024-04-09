@@ -11,5 +11,11 @@ export default defineConfig({
         replacement: `/out/frontend/${isProd ? 'full' : 'fast'}LinkJS.dest/$1`
       }
     ]
-  }
+  },
+  server: {
+    proxy: {
+      // to avoid CORS issues, proxy the requests to the backend
+      '/RpcApi/': 'http://localhost:8080',
+    }
+  },
 });

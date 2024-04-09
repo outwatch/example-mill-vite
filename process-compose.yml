@@ -21,7 +21,7 @@ processes:
         condition: process_completed
 
   mill-watch:
-    command: mill --color true --watch frontend.fastLinkJS
+    command: mill --color true --watch "{backend.runBackground,frontend.fastLinkJS}"
     depends_on:
       mill-build:
         # watch should start, even if the initial build failed
