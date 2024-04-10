@@ -1,6 +1,6 @@
 import mill._, scalalib._, scalajslib._
 import $ivy.`io.github.nafg.millbundler::jsdeps::0.2.0`, io.github.nafg.millbundler.jsdeps._
-import $ivy.`com.github.cornerman::mill-quillcodegen:0.1.5+3-28f2a859+20240409-2015-SNAPSHOT`, quillcodegen.plugin.QuillCodegenModule
+import $ivy.`com.github.cornerman::mill-quillcodegen:0.2.0`, quillcodegen.plugin.QuillCodegenModule
 
 import mill.scalajslib._
 import mill.scalajslib.api._
@@ -11,6 +11,10 @@ trait AppScalaModule extends ScalaModule {
     ivy"org.typelevel::cats-effect::3.5.4",
     ivy"com.github.rssh::dotty-cps-async::0.9.21",
     ivy"com.github.rssh::cps-async-connect-cats-effect::0.9.21",
+  )
+  def scalacOptions = Seq(
+    // TODO: https://github.com/zio/zio-quill/issues/2639
+    "-Wconf:msg=Questionable row-class found:s"
   )
 }
 
@@ -33,18 +37,15 @@ object frontend extends AppScalaJSModule {
 }
 
 object backend extends AppScalaModule with QuillCodegenModule {
-  def quillcodegenJdbcUrl       = "jdbc:sqlite:data_codegen.db"
   def quillcodegenPackagePrefix = "dbtypes"
+  def quillcodegenJdbcUrl       = s"jdbc:sqlite:data_codegen.db"
+  // def quillcodegenJdbcUrl = T { s"jdbc:sqlite:" + T.dest + "/tmp.db" }
+  def dbSchemaFile = T.source(os.pwd / "schema.sql")
   def quillcodegenSetupTask = T.task {
     val dbpath = quillcodegenJdbcUrl.stripPrefix("jdbc:sqlite:")
     os.remove(os.pwd / dbpath)
-    executeSqlFile(PathRef(os.pwd / "schema.sql"))
+    executeSqlFile(dbSchemaFile())
   }
-
-// scalacOptions ++= Seq(
-//     // TODO: https://github.com/zio/zio-quill/issues/2639
-//     "-Wconf:msg=Questionable row-class found:s"
-//   ),
 
   def moduleDeps = Seq(rpc.jvm)
   def ivyDeps = super.ivyDeps() ++ Agg(

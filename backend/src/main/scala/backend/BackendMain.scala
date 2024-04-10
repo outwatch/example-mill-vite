@@ -35,20 +35,34 @@ object BackendMain extends IOApp.Simple {
   def run = async[IO] {
     val appConfig = AppConfig.fromEnv()
 
-    await(Woo.woo)
+    await(Woo.runQueryBench)
 
-    await(HttpServer.start(appConfig))
+    // await(HttpServer.start(appConfig))
   }
 }
 
 object Woo {
   val ctx = doobie.DoobieContext.SQLite(Literal)
   import ctx._
+  val xa = Transactor.fromDriverManager[IO]("org.sqlite.JDBC", "jdbc:sqlite:data.db?foreign_keys=ON", None)
+
   def woo = async[IO] {
 
-    val xa                           = Transactor.fromDriverManager[IO]("org.sqlite.JDBC", "jdbc:sqlite:data.db?foreign_keys=ON", None)
     val queryRun: ConnectionIO[Unit] = run(FooDao.query).map(println(_))
     await(queryRun.transact(xa))
+  }
+
+  def runQueryBench = async[IO] {
+    println("starting")
+    val start = System.nanoTime()
+    val n     = 2000
+    for (i <- 1 to n) {
+      // await(run(FooDao.query).transact(xa))
+      // //
+      await(run(MyidsDao.query.insertValue(Myids(lift(i)))).transact(xa))
+    }
+    val end = System.nanoTime()
+    println("finished: " + ((end - start) / n.toDouble / 1000000) + "ms per query")
   }
 }
 
