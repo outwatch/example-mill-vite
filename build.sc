@@ -50,8 +50,7 @@ object backend extends AppScalaModule with QuillCodegenModule {
   def moduleDeps = Seq(rpc.jvm)
   def ivyDeps = super.ivyDeps() ++ Agg(
     ivy"org.xerial:sqlite-jdbc::3.44.1.0",
-    ivy"io.getquill::quill-doobie::4.8.1",
-    ivy"org.tpolecat::doobie-core::1.0.0-RC5",
+    ivy"io.getquill::quill-jdbc::4.8.1",
     ivy"com.github.cornerman::sloth::0.7.1",
     ivy"com.github.rssh::dotty-cps-async::0.9.21",
     ivy"com.github.rssh::cps-async-connect-cats-effect::0.9.21",

@@ -23,43 +23,48 @@ import org.http4s.*
 import http4sJsoniter.ArrayEntityCodec.*
 import org.http4s.headers.`Content-Type`
 
-import doobie.util.transactor.Transactor
-import doobie.ConnectionIO
-import doobie.implicits._
 import io.getquill._
 import dbtypes.schema.*
 import dbtypes.schema.SchemaExtensions.*
 import cats.implicits.*
+import scala.util.chaining.*
+import org.sqlite.SQLiteDataSource
 
 object BackendMain extends IOApp.Simple {
   def run = async[IO] {
     val appConfig = AppConfig.fromEnv()
 
-    await(Woo.runQueryBench)
+    Woo.runQueryBench
 
     // await(HttpServer.start(appConfig))
   }
 }
 
 object Woo {
-  val ctx = doobie.DoobieContext.SQLite(Literal)
+  val datasource = SQLiteDataSource().tap(_.setUrl("jdbc:sqlite::memory:?foreign_keys=ON"))
+  val connection = datasource.getConnection()
+  val ctx        = io.getquill.SqliteJdbcContext(Literal, datasource)
   import ctx._
-  val xa = Transactor.fromDriverManager[IO]("org.sqlite.JDBC", "jdbc:sqlite:data.db?foreign_keys=ON", None)
 
-  def woo = async[IO] {
-
-    val queryRun: ConnectionIO[Unit] = run(FooDao.query).map(println(_))
-    await(queryRun.transact(xa))
+  def woo = {
+    println(run(FooDao.query))
   }
 
-  def runQueryBench = async[IO] {
+  def runQueryBench = {
     println("starting")
-    val start = System.nanoTime()
-    val n     = 2000
+    val n            = 100_000
+    inline def query = quote { sql"select 1".as[io.getquill.Query[Int]] }
+    val queryString  = ctx.translate(query)
+    val q            = connection.prepareStatement(queryString)
+    val start        = System.nanoTime()
     for (i <- 1 to n) {
       // await(run(FooDao.query).transact(xa))
       // //
-      await(run(MyidsDao.query.insertValue(Myids(lift(i)))).transact(xa))
+      // run(MyidsDao.query.insertValue(Myids(lift(i))))
+      // run(query) // 0.7ms
+      q.executeQuery() // 0.02ms
+      // val foo = ctx.prepare(quote { sql"select 1".as[io.getquill.Query[Int]] })
+      // foo(connection) // 0.2ms
     }
     val end = System.nanoTime()
     println("finished: " + ((end - start) / n.toDouble / 1000000) + "ms per query")
