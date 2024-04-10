@@ -58,6 +58,7 @@ object backend extends AppScalaModule with QuillCodegenModule {
     ivy"org.http4s::http4s-dsl::0.23.24",
     ivy"com.github.cornerman::http4s-jsoniter::0.1.1",
     ivy"com.outr::scribe-slf4j2::3.13.0", // logging
+    ivy"org.flywaydb:flyway-core::10.6.0",
   )
 }
 

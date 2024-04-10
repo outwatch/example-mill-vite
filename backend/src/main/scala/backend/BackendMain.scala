@@ -9,6 +9,7 @@ import cats.effect.Resource
 import com.comcast.ip4s.*
 import org.http4s.ember.server.EmberServerBuilder
 import org.http4s.server.middleware.Logger
+import org.flywaydb.core.Flyway
 
 import scala.concurrent.duration.DurationInt
 import cats.data.{Kleisli, OptionT}
@@ -30,9 +31,12 @@ import cats.implicits.*
 import scala.util.chaining.*
 import org.sqlite.SQLiteDataSource
 
+val jdbcUrl = "jdbc:sqlite::memory:?foreign_keys=ON"
+
 object BackendMain extends IOApp.Simple {
   def run = async[IO] {
     val appConfig = AppConfig.fromEnv()
+    await(DbMigrations.migrate(jdbcUrl))
 
     Woo.runQueryBench
 
@@ -156,4 +160,21 @@ object ServerRoutes {
   //   }
   // }
 
+}
+
+
+object DbMigrations {
+
+  def migrate(jdbcUrl: String): IO[Unit] = IO.blocking {
+    val flyway = defaultFlyway(jdbcUrl).load()
+    flyway.migrate()
+  }.void
+
+  def repair(jdbcUrl: String): IO[Unit] = IO.blocking {
+    val flyway = defaultFlyway(jdbcUrl).load()
+    flyway.repair()
+  }.void
+
+  private def defaultFlyway(jdbcUrl: String) =
+    Flyway.configure().dataSource(jdbcUrl, null, null).locations("classpath:migrations").failOnMissingLocations(true)
 }
