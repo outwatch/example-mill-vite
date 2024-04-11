@@ -38,12 +38,9 @@ object frontend extends AppScalaJSModule {
 
 object backend extends AppScalaModule with QuillCodegenModule {
   def quillcodegenPackagePrefix = "dbtypes"
-  def quillcodegenJdbcUrl       = s"jdbc:sqlite:data_codegen.db"
-  // def quillcodegenJdbcUrl = T { s"jdbc:sqlite:" + T.dest + "/tmp.db" }
-  def dbSchemaFile = T.source(os.pwd / "schema.sql")
+  def quillcodegenJdbcUrl       = "jdbc:sqlite::memory:"
+  def dbSchemaFile              = T.source(os.pwd / "schema.sql")
   def quillcodegenSetupTask = T.task {
-    val dbpath = quillcodegenJdbcUrl.stripPrefix("jdbc:sqlite:")
-    os.remove(os.pwd / dbpath)
     executeSqlFile(dbSchemaFile())
   }
 
@@ -51,6 +48,7 @@ object backend extends AppScalaModule with QuillCodegenModule {
   def ivyDeps = super.ivyDeps() ++ Agg(
     ivy"org.xerial:sqlite-jdbc::3.44.1.0",
     ivy"io.getquill::quill-jdbc::4.8.1",
+    ivy"com.augustnagro::magnum::1.1.1",
     ivy"com.github.cornerman::sloth::0.7.1",
     ivy"com.github.rssh::dotty-cps-async::0.9.21",
     ivy"com.github.rssh::cps-async-connect-cats-effect::0.9.21",

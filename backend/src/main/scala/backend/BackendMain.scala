@@ -30,48 +30,49 @@ import dbtypes.schema.SchemaExtensions.*
 import cats.implicits.*
 import scala.util.chaining.*
 import org.sqlite.SQLiteDataSource
+import com.augustnagro.magnum.*
 
-val jdbcUrl = "jdbc:sqlite::memory:?foreign_keys=ON"
+val jdbcUrl = "jdbc:sqlite:data.db?foreign_keys=ON"
 
 object BackendMain extends IOApp.Simple {
   def run = async[IO] {
     val appConfig = AppConfig.fromEnv()
     await(DbMigrations.migrate(jdbcUrl))
 
-    Woo.runQueryBench
+    Woo.runQueryBench()
 
     // await(HttpServer.start(appConfig))
   }
 }
 
 object Woo {
-  val datasource = SQLiteDataSource().tap(_.setUrl("jdbc:sqlite::memory:?foreign_keys=ON"))
-  val connection = datasource.getConnection()
-  val ctx        = io.getquill.SqliteJdbcContext(Literal, datasource)
-  import ctx._
+  val datasource = SQLiteDataSource().tap(_.setUrl(jdbcUrl))
+  // val connection = datasource.getConnection()
+  // val ctx        = io.getquill.SqliteJdbcContext(Literal, datasource)
+  // import ctx._
 
-  def woo = {
-    println(run(FooDao.query))
-  }
-
-  def runQueryBench = {
-    println("starting")
-    val n            = 100_000
-    inline def query = quote { sql"select 1".as[io.getquill.Query[Int]] }
-    val queryString  = ctx.translate(query)
-    val q            = connection.prepareStatement(queryString)
-    val start        = System.nanoTime()
-    for (i <- 1 to n) {
-      // await(run(FooDao.query).transact(xa))
-      // //
-      // run(MyidsDao.query.insertValue(Myids(lift(i))))
-      // run(query) // 0.7ms
-      q.executeQuery() // 0.02ms
-      // val foo = ctx.prepare(quote { sql"select 1".as[io.getquill.Query[Int]] })
-      // foo(connection) // 0.2ms
+  def runQueryBench() = {
+    connect(datasource) {
+      println("starting")
+      val n = 10
+      // inline def query = quote { sql"select 1".as[io.getquill.Query[Int]] }
+      // val queryString  = ctx.translate(query)
+      // val q            = connection.prepareStatement(queryString)
+      val query = sql"INSERT INTO myids (id) values (7)".update
+      val start = System.nanoTime()
+      for (i <- 1 to n) {
+        query.run()
+        // await(run(FooDao.query).transact(xa))
+        // //
+        // run(MyidsDao.query.insertValue(Myids(lift(i))))
+        // run(query) // 0.7ms
+        // q.executeQuery() // 0.02ms
+        // val foo = ctx.prepare(quote { sql"select 1".as[io.getquill.Query[Int]] })
+        // foo(connection) // 0.2ms
+      }
+      val end = System.nanoTime()
+      println("finished: " + ((end - start) / n.toDouble / 1000000) + "ms per query")
     }
-    val end = System.nanoTime()
-    println("finished: " + ((end - start) / n.toDouble / 1000000) + "ms per query")
   }
 }
 
@@ -161,7 +162,6 @@ object ServerRoutes {
   // }
 
 }
-
 
 object DbMigrations {
 
