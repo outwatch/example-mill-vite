@@ -40,7 +40,7 @@ Technologies used:
     ```
    The services are defined in [process-compose.yml](process-compose.yml).
 1. Point your browser to <http://localhost:5173>
-1. Edit [Main.scala](frontend/src/main/scala/frontend/Main.scala) to see hot reloading.
+1. Edit [FrontendMain.scala](frontend/src/main/scala/frontend/FrontendMain.scala) to see hot reloading.
 1. Production build:
    ```shell
    mill frontend.fullLinkJS && npx vite build
@@ -64,4 +64,4 @@ Technologies used:
     npx vite dev
     ```
 1. Point your browser to <http://localhost:5173>
-1. Edit [Main.scala](frontend/src/main/scala/frontend/Main.scala) to see hot reloading.
+1. Edit [FrontendMain.scala](frontend/src/main/scala/frontend/FrontendMain.scala) to see hot reloading.
