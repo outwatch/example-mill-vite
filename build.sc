@@ -1,6 +1,6 @@
 import mill._, scalalib._, scalajslib._
 import $ivy.`io.github.nafg.millbundler::jsdeps::0.2.0`, io.github.nafg.millbundler.jsdeps._
-import $ivy.`com.github.cornerman::mill-db-codegen:0.3.1`, dbcodegen.plugin.DbCodegenModule
+import $ivy.`com.github.cornerman::mill-db-codegen:0.4.0`, dbcodegen.plugin._
 
 import mill.scalajslib._
 import mill.scalajslib.api._
@@ -33,15 +33,13 @@ object frontend extends AppScalaJSModule {
 }
 
 object backend extends AppScalaModule with DbCodegenModule {
-  // TODO: trigger build when template file changes
-  def dbcodegenTemplateFiles = Seq(PathRef(os.pwd / "schema.scala.ssp"))
-  def dbcodegenPackagePrefix = "dbtypes"
-  def dbcodegenJdbcUrl       = "jdbc:sqlite::foobar"
-  // TODO: fix running executeSql and schema-crawler over the same connection again - currently need file instead of memory.
-  // def dbcodegenJdbcUrl = "jdbc:sqlite::memory:"
-  def dbSchemaFile = T.source(os.pwd / "schema.sql")
-  def dbcodegenSetupTask = T.task {
-    executeSqlFile(dbSchemaFile())
+  def dbTemplateFile = T.source(os.pwd / "schema.scala.ssp")
+  def dbSchemaFile   = T.source(os.pwd / "schema.sql")
+
+  def dbcodegenTemplateFiles = T { Seq(dbTemplateFile()) }
+  def dbcodegenJdbcUrl       = "jdbc:sqlite:file::memory:?cache=shared"
+  def dbcodegenSetupTask = T.task { (db: Db) =>
+    db.executeSqlFile(dbSchemaFile())
   }
 
   def moduleDeps = Seq(rpc.jvm)
