@@ -25,8 +25,6 @@ import http4sJsoniter.ArrayEntityCodec.*
 import org.http4s.headers.`Content-Type`
 
 import io.getquill._
-import dbtypes.schema.*
-import dbtypes.schema.SchemaExtensions.*
 import cats.implicits.*
 import scala.util.chaining.*
 import org.sqlite.SQLiteDataSource

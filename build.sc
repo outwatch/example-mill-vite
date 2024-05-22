@@ -1,6 +1,6 @@
 import mill._, scalalib._, scalajslib._
 import $ivy.`io.github.nafg.millbundler::jsdeps::0.2.0`, io.github.nafg.millbundler.jsdeps._
-import $ivy.`com.github.cornerman::mill-quillcodegen:0.2.0`, quillcodegen.plugin.QuillCodegenModule
+import $ivy.`com.github.cornerman::mill-db-codegen:0.3.1`, dbcodegen.plugin.DbCodegenModule
 
 import mill.scalajslib._
 import mill.scalajslib.api._
@@ -11,10 +11,6 @@ trait AppScalaModule extends ScalaModule {
     ivy"org.typelevel::cats-effect::3.5.4",
     ivy"com.github.rssh::dotty-cps-async::0.9.21",
     ivy"com.github.rssh::cps-async-connect-cats-effect::0.9.21",
-  )
-  def scalacOptions = Seq(
-    // TODO: https://github.com/zio/zio-quill/issues/2639
-    "-Wconf:msg=Questionable row-class found:s"
   )
 }
 
@@ -36,11 +32,15 @@ object frontend extends AppScalaJSModule {
   )
 }
 
-object backend extends AppScalaModule with QuillCodegenModule {
-  def quillcodegenPackagePrefix = "dbtypes"
-  def quillcodegenJdbcUrl       = "jdbc:sqlite::memory:"
-  def dbSchemaFile              = T.source(os.pwd / "schema.sql")
-  def quillcodegenSetupTask = T.task {
+object backend extends AppScalaModule with DbCodegenModule {
+  // TODO: trigger build when template file changes
+  def dbcodegenTemplateFiles = Seq(PathRef(os.pwd / "schema.scala.ssp"))
+  def dbcodegenPackagePrefix = "dbtypes"
+  def dbcodegenJdbcUrl       = "jdbc:sqlite::foobar"
+  // TODO: fix running executeSql and schema-crawler over the same connection again - currently need file instead of memory.
+  // def dbcodegenJdbcUrl = "jdbc:sqlite::memory:"
+  def dbSchemaFile = T.source(os.pwd / "schema.sql")
+  def dbcodegenSetupTask = T.task {
     executeSqlFile(dbSchemaFile())
   }
 
