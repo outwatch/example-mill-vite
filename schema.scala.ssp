@@ -7,6 +7,7 @@ import com.augustnagro.magnum.*
 #for (table <- schema.tables)
 
 @Table(SqliteDbType)
+@SqlName("${table.name}")
 case class ${table.scalaName}(
   #for (column <- table.columns)
   #if (column.db.isPartOfPrimaryKey)
@@ -20,13 +21,36 @@ object ${table.scalaName} {
   #{ val primaryKeyColumns = table.columns.filter(_.db.isPartOfPrimaryKey)}#
   type Id = ${if (primaryKeyColumns.isEmpty) "Null" else primaryKeyColumns.map(_.scalaType).mkString("(", ", ", ")")}
 
+  #if (table.isView)
+  val Table = TableInfo[${table.scalaName}, ${table.scalaName}, ${table.scalaName}.Id]
+  #else
   case class Creator(
     #for (column <- table.columns if !column.db.isGenerated && !column.db.hasDefaultValue && !column.db.isAutoIncremented)
     ${column.scalaName}: ${column.scalaType},
     #end
   )
+  val Table = TableInfo[${table.scalaName}.Creator, ${table.scalaName}, ${table.scalaName}.Id]
+  #end
 }
 
-val ${table.scalaName}Repo = Repo[${table.scalaName}.Creator, ${table.scalaName}, ${table.scalaName}.Id]
+#if (table.isView)
+object ${table.scalaName}Repo extends ImmutableRepo[${table.scalaName}, ${table.scalaName}.Id] {
+#else
+object ${table.scalaName}Repo extends Repo[${table.scalaName}.Creator, ${table.scalaName}, ${table.scalaName}.Id] {
+#end
 
+    #for (index <- table.indices)
+    def findByIndex${index.scalaName}(
+      #for (column <- index.columns)
+      ${column.scalaName}: ${column.scalaType},
+      #end
+    )(using DbCon): ${if (index.db.isUnique) "Option" else "Vector"}[${table.scalaName}] = {
+        val spec = Spec[${table.scalaName}]
+          #for (column <- index.columns)
+          .where(sql"${column.name} = $${column.name}")
+          #end
+        findAll(spec)${if (index.db.isUnique) ".headOption" else ""}
+    }
+    #end
+}
 #end

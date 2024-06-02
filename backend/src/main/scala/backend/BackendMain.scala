@@ -24,7 +24,6 @@ import org.http4s.*
 import http4sJsoniter.ArrayEntityCodec.*
 import org.http4s.headers.`Content-Type`
 
-import io.getquill._
 import cats.implicits.*
 import scala.util.chaining.*
 import org.sqlite.SQLiteDataSource
@@ -49,6 +48,8 @@ object Woo {
   // val ctx        = io.getquill.SqliteJdbcContext(Literal, datasource)
   // import ctx._
 
+  import backend.db.schema.*
+
   def runQueryBench() = {
     connect(datasource) {
       println("starting")
@@ -59,7 +60,8 @@ object Woo {
       val query = sql"INSERT INTO myids (id) values (7)".update
       val start = System.nanoTime()
       for (i <- 1 to n) {
-        query.run()
+        // query.run()
+        FooRepo.insert(Foo.Creator("heinz"))
         // await(run(FooDao.query).transact(xa))
         // //
         // run(MyidsDao.query.insertValue(Myids(lift(i))))

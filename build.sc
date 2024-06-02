@@ -1,6 +1,6 @@
 import mill._, scalalib._, scalajslib._
 import $ivy.`io.github.nafg.millbundler::jsdeps::0.2.0`, io.github.nafg.millbundler.jsdeps._
-import $ivy.`com.github.cornerman::mill-db-codegen:0.4.0`, dbcodegen.plugin._
+import $ivy.`com.github.cornerman::mill-db-codegen:0.4.1`, dbcodegen.plugin._
 
 import mill.scalajslib._
 import mill.scalajslib.api._
@@ -44,8 +44,7 @@ object backend extends AppScalaModule with DbCodegenModule {
 
   def moduleDeps = Seq(rpc.jvm)
   def ivyDeps = super.ivyDeps() ++ Agg(
-    ivy"org.xerial:sqlite-jdbc::3.44.1.0",
-    ivy"io.getquill::quill-jdbc::4.8.1",
+    ivy"org.xerial:sqlite-jdbc::3.46.0.0",
     ivy"com.augustnagro::magnum::1.1.1",
     ivy"com.github.cornerman::sloth::0.7.1",
     ivy"com.github.rssh::dotty-cps-async::0.9.21",
