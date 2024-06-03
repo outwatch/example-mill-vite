@@ -1,6 +1,6 @@
 import mill._, scalalib._, scalajslib._
 import $ivy.`io.github.nafg.millbundler::jsdeps::0.2.0`, io.github.nafg.millbundler.jsdeps._
-import $ivy.`com.github.cornerman::mill-db-codegen:0.4.1`, dbcodegen.plugin._
+import $ivy.`com.github.cornerman::mill-db-codegen:0.4.1+2-918d6203-SNAPSHOT`, dbcodegen.plugin._
 
 import mill.scalajslib._
 import mill.scalajslib.api._
