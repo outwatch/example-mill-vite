@@ -1,6 +1,5 @@
 package rpc
 
-import scala.concurrent.Future
 import cats.effect.IO
 import com.github.plokhotnyuk.jsoniter_scala.core.JsonValueCodec
 import com.github.plokhotnyuk.jsoniter_scala.macros.JsonCodecMaker

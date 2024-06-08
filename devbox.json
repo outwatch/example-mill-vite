@@ -1,9 +1,12 @@
 {
   "$schema": "https://raw.githubusercontent.com/jetpack-io/devbox/0.10.1/.schema/devbox.schema.json",
   "packages": [
+    "just@latest",
+    "process-compose@latest",
     "mill@latest",
-    "nodejs@latest"
-  ]
+    "bun@latest",
+    "sqlite-interactive@latest",
+  ],
 }
 // this file supports comments
 // vim: set ft=jsonc:

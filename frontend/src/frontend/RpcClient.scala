@@ -1,30 +1,14 @@
 package frontend
 
-import outwatch._
-import outwatch.dsl._
 import cats.effect.IO
-import sloth.{Client, Request, RequestTransport}
 import org.scalajs.dom
-import cats.effect.IOApp
-
-// Outwatch documentation: https://outwatch.github.io/docs/readme.html
-
-object Main extends IOApp.Simple {
-  def run = {
-    val myComponent = div(
-      "Hello World",
-      RpcClient.requestRpc.fun(5),
-    )
-
-    // render the component into the <div id="app"></div> in index.html
-    Outwatch.renderReplace[IO]("#app", myComponent)
-  }
-}
+import outwatch.dsl.s
+import sloth.{Client, Request, RequestTransport}
 
 object RpcClient {
   import chameleon.ext.jsoniter.given
   import rpc.JsonCodecs.given
-  val requestRpc = Client[String, IO](RequestRpcTransport).wire[rpc.RpcApi]
+  val call = Client[String, IO](RequestRpcTransport).wire[rpc.RpcApi]
 }
 
 private object RequestRpcTransport extends RequestTransport[String, IO] {

@@ -18,7 +18,7 @@ export default defineConfig({
   server: {
     proxy: {
       // to avoid CORS issues, proxy the requests to the backend
-      '/RpcApi/': 'http://localhost:8080',
-    }
+      '/RpcApi/': 'http://localhost:8081',
+    },
   },
 });
