@@ -61,7 +61,7 @@ object backend extends AppScalaModule with DbCodegenModule {
   def moduleDeps = Seq(rpc.jvm)
   def ivyDeps = super.ivyDeps() ++ Agg(
     ivy"org.xerial:sqlite-jdbc::3.46.0.0",
-    ivy"com.augustnagro::magnum::1.1.1", // db access
+    ivy"com.augustnagro::magnum::1.2.0", // db access
     ivy"com.github.cornerman::sloth-http4s-server::0.7.3",
     ivy"org.http4s::http4s-ember-server::0.23.24",
     ivy"org.http4s::http4s-dsl::0.23.24",

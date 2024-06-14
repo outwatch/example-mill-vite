@@ -3,5 +3,10 @@ package backend
 import cats.effect.IO
 
 object RpcApiImpl extends rpc.RpcApi {
-  def fun(x: Int) = IO.pure(x + 1)
+  def send(messageId: Int, userId: String): IO[Int] = {
+    ???
+  }
+  def create(content: Int): IO[Int] = {
+    ???
+  }
 }

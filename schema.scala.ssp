@@ -47,7 +47,7 @@ object ${table.scalaName}Repo extends Repo[${table.scalaName}.Creator, ${table.s
     )(using DbCon): ${if (index.db.isUnique) "Option" else "Vector"}[${table.scalaName}] = {
         val spec = Spec[${table.scalaName}]
           #for (column <- index.columns)
-          .where(sql"${column.name} = $${column.name}")
+          .where(sql"${column.name} = $${column.scalaName}")
           #end
         findAll(spec)${if (index.db.isUnique) ".headOption" else ""}
     }
