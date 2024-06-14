@@ -8,6 +8,7 @@
     "vite": "^5.2.7"
   },
   "dependencies": {
-    "snabbdom": "github:outwatch/snabbdom#0.7.5"
+    "snabbdom": "github:outwatch/snabbdom#0.7.5",
+    "keratin-authn": "^1.4.1"
   }
 }

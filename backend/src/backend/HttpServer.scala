@@ -10,16 +10,16 @@ import org.http4s.*
 import org.http4s.dsl.Http4sDsl
 import org.http4s.ember.server.EmberServerBuilder
 import org.http4s.server.middleware.Logger
-import org.http4s.server.staticcontent.{FileService, MemoryCache, fileService}
+import org.http4s.server.staticcontent.{fileService, FileService, MemoryCache}
+import sloth.ext.http4s.server.HttpRpcRoutes
 
 import scala.concurrent.duration.DurationInt
-
 
 object HttpServer {
   def start(config: AppConfig): IO[Unit] = asyncScope[IO] {
     val routes = ServerRoutes.fileRoutes(config) <+>
 //        infoRoutes(state) <+>
-      ServerRoutes.slothRpcRoutes()
+      ServerRoutes.rpcRoutes()
 
     val _ = await(
       EmberServerBuilder
@@ -37,26 +37,28 @@ object HttpServer {
 
 object ServerRoutes {
   private val dsl = Http4sDsl[IO]
-  import dsl.*
+  def rpcRoutes(): HttpRoutes[IO] = {
+    import chameleon.ext.upickle.*
+    val slothRouter = sloth.Router[String, IO].route[rpc.RpcApi](RpcApiImpl)
 
-  def slothRpcRoutes(): HttpRoutes[IO] = {
-    import chameleon.ext.jsoniter.given
-    import rpc.JsonCodecs.given
-    import sloth.{Router, ServerFailure}
-
-    val slothRouter = Router[String, IO].route[rpc.RpcApi](RpcApiImpl)
-
-    // implement generic http route to call the sloth router
-    HttpRoutes.of[IO] { case request @ _ -> Root / apiName / methodName =>
-      request.as[String].flatMap { payload =>
-        val requestPath = List(apiName, methodName)
-        slothRouter(sloth.Request(requestPath, payload)) match {
-          case Left(error)     => InternalServerError(error.toString) // TODO: print errror instead of returning
-          case Right(response) => Ok(response)
-        }
-      }
-    }
+    HttpRpcRoutes.apply[String, IO](slothRouter)
   }
+
+  // def slothRpcRoutes(): HttpRoutes[IO] = {
+  //   import sloth.{Router, ServerFailure}
+  //
+  //
+  //   // implement generic http route to call the sloth router
+  //   HttpRoutes.of[IO] { case request @ _ -> Root / apiName / methodName =>
+  //     request.as[String].flatMap { payload =>
+  //       val requestPath = List(apiName, methodName)
+  //       slothRouter(sloth.Request(requestPath, payload)) match {
+  //         case Left(error)     => InternalServerError(error.toString) // TODO: print errror instead of returning
+  //         case Right(response) => Ok(response)
+  //       }
+  //     }
+  //   }
+  // }
 
   def fileRoutes(config: AppConfig): HttpRoutes[IO] = {
     fileService[IO](

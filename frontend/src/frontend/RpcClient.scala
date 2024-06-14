@@ -2,20 +2,15 @@ package frontend
 
 import cats.effect.IO
 import org.scalajs.dom
-import outwatch.dsl.s
-import sloth.{Client, Request, RequestTransport}
+import sloth.ext.http4s.client.*
+import org.http4s.dom.*
 
 object RpcClient {
-  import chameleon.ext.jsoniter.given
-  import rpc.JsonCodecs.given
-  val call = Client[String, IO](RequestRpcTransport).wire[rpc.RpcApi]
-}
+  import chameleon.ext.upickle.given // TODO: Option as null
 
-private object RequestRpcTransport extends RequestTransport[String, IO] {
-  override def apply(request: Request[String]): IO[String] = {
-    import org.scalajs.dom.window.location
-    val url         = s"${location.origin}/${request.path.mkString("/")}"
-    val requestArgs = new dom.RequestInit { method = dom.HttpMethod.POST; body = request.payload }
-    IO.fromThenable(IO(dom.fetch(url, requestArgs).`then`[String](_.text())))
-  }
+  private val httpConfig    = IO.pure(HttpRequestConfig())
+  private val fetchClient   = FetchClientBuilder[IO].create
+  private val requestClient = sloth.Client[String, IO](HttpRpcTransport(fetchClient, httpConfig))
+
+  val call: rpc.RpcApi = requestClient.wire[rpc.RpcApi]
 }

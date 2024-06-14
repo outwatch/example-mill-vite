@@ -40,7 +40,7 @@ object ${table.scalaName}Repo extends Repo[${table.scalaName}.Creator, ${table.s
 #end
 
     #for (index <- table.indices)
-    def findBy${index.columns.map(_.scalaName.stripPrefix("`").stripSuffix("`").capitalize).mkString}(
+    def findByIndexOn${index.columns.map(_.scalaName.stripPrefix("`").stripSuffix("`").capitalize).mkString}(
       #for (column <- index.columns)
       ${column.scalaName}: ${column.scalaType},
       #end
