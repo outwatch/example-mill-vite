@@ -31,7 +31,7 @@ def createMessage = {
   val messageString = Var("")
   div(
     input(tpe := "text", placeholder := "type message", value <-- messageString, onInput.value --> messageString),
-    button("create", onClick.foreachEffect(_ => RpcClient.call.create(messageString.now()).void)),
+    button("create", data.testId := "create-message-button", onClick.foreachEffect(_ => RpcClient.call.create(messageString.now()).void)),
   )
 }
 
@@ -53,6 +53,7 @@ def authControl = {
   div(
     button(
       "Register",
+      data.testId := "register-button",
       onClick.doEffect {
         RpcClient.call.register(username = "u2", password = "wolfgang254!!??")
       },
