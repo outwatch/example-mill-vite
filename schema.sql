@@ -1,6 +1,6 @@
-create table user_profile(
-  user_id text not null primary key,
-  user_name text not null
+create table device_profile(
+  device_id text not null primary key,
+  device_name text not null
 ) strict;
 
 create table message(
@@ -10,12 +10,12 @@ create table message(
 
 create table inbox(
   message_id int not null primary key references message(message_id),
-  user_id text not null
+  device_id text not null
 ) strict;
-create index idx_inbox_user_id on inbox(user_id);
+create index idx_inbox_device_id on inbox(device_id);
 
 create table contacts(
-  user_id text not null,
-  contact_user_id text not null,
-  unique(user_id, contact_user_id)
+  device_id text not null,
+  contact_device_id text not null,
+  unique(device_id, contact_device_id)
 ) strict;

@@ -16,7 +16,6 @@ object Main extends IOApp.Simple {
     val count = Var(0)
     val myComponent = {
       div(
-        authControl,
         createMessage,
         inbox,
       )
@@ -40,36 +39,5 @@ def inbox = {
     lift {
       unlift(RpcClient.call.getInbox()).map(message => div(message.content))
     }
-  )
-}
-
-def authControl = {
-  val authn = AuthnClient[IO](
-    AuthnClientConfig(
-      hostUrl = "http://localhost:3000",
-      sessionStorage = SessionStorage.LocalStorage("session"),
-    )
-  )
-  div(
-    button(
-      "Register",
-      data.testId := "register-button",
-      onClick.doEffect {
-        RpcClient.call.register(username = "u2", password = "wolfgang254!!??")
-      },
-    ),
-    button(
-      "Login",
-      onClick.doEffect {
-        authn.login(Credentials(username = "u2", password = "wolfgang254!!??"))
-      },
-    ),
-    b(authn.session),
-    button(
-      "Logout",
-      onClick.doEffect {
-        authn.logout
-      },
-    ),
   )
 }
