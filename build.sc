@@ -11,7 +11,7 @@ import mill.scalajslib.api._
 trait AppScalaModule extends ScalaModule {
   def scalaVersion = "3.4.1"
   val versions = new {
-    val authn    = "0.1.2+7-9b167869-SNAPSHOT"
+    val authn    = "0.1.2+8-c4db15bd-SNAPSHOT"
     val colibri  = "0.8.4"
     val outwatch = "1.0.0"
     val sloth    = "0.7.4"
