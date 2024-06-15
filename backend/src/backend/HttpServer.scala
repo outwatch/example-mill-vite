@@ -10,24 +10,39 @@ import org.http4s.*
 import org.http4s.dsl.Http4sDsl
 import org.http4s.ember.server.EmberServerBuilder
 import org.http4s.server.middleware.Logger
+import org.http4s.server.middleware.ErrorAction
+import org.http4s.server.middleware.ErrorHandling
 import org.http4s.server.staticcontent.{fileService, FileService, MemoryCache}
 import sloth.ext.http4s.server.HttpRpcRoutes
 
 import scala.concurrent.duration.DurationInt
 
 object HttpServer {
+  def errorHandler(t: Throwable, msg: => String): OptionT[IO, Unit] =
+    OptionT.liftF(
+      IO.println(msg) >>
+        IO.println(t) >>
+        IO(t.printStackTrace())
+    )
+
   def start(config: AppConfig): IO[Unit] = asyncScope[IO] {
-    val routes = ServerRoutes.fileRoutes(config) <+>
+    val routes =
+      ServerRoutes.rpcRoutes() <+>
+        ServerRoutes.fileRoutes(config)
 //        infoRoutes(state) <+>
-      ServerRoutes.rpcRoutes()
+
+    val loggedRoutes = ErrorAction.log(
+      routes,
+      messageFailureLogAction = errorHandler,
+      serviceErrorLogAction = errorHandler,
+    )
 
     val _ = await(
       EmberServerBuilder
         .default[IO]
         .withHost(ipv4"0.0.0.0")
         .withPort(port"8081")
-        // .withHttpApp(Logger.httpApp(logHeaders = true, logBody = true)(routes.orNotFound))
-        .withHttpApp(routes.orNotFound)
+        .withHttpApp(loggedRoutes.orNotFound)
         .withShutdownTimeout(1.seconds)
         .build
     )
