@@ -17,13 +17,14 @@ import org.http4s.ember.client.EmberClientBuilder
 import cats.effect.unsafe.implicits.global // TODO
 import authn.backend.AccountImport
 import scala.util.control.NonFatal
+import scala.concurrent.duration.*
 
 class RpcApiImpl(request: Request[IO]) extends rpc.RpcApi {
 
   val headers: Option[Authorization] = request.headers.get[Authorization]
   val token: Option[String]          = headers.collect { case Authorization(Credentials.Token(AuthScheme.Bearer, token)) => token }
 
-  val httpClient = EmberClientBuilder.default[IO].build.allocated.map(_._1).unsafeRunSync() // TODO not forever
+  val httpClient = EmberClientBuilder.default[IO].withTimeout(44.seconds).build.allocated.map(_._1).unsafeRunSync() // TODO not forever
 
   val authnClient = AuthnClient[IO](
     AuthnClientConfig(
