@@ -1,6 +1,6 @@
 <%@ val schema: dbcodegen.DataSchema %>
 
-package backend.db.${schema.scalaName}
+package backend.db
 
 import com.augustnagro.magnum.*
 

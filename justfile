@@ -5,6 +5,9 @@ _default:
 dev:
     process-compose up -t=false
 
+db:
+  sqlite3 data.db
+
 gen-bsp:
     ./mill mill.bsp.BSP/install
 

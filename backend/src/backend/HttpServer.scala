@@ -26,7 +26,8 @@ object HttpServer {
         .default[IO]
         .withHost(ipv4"0.0.0.0")
         .withPort(port"8081")
-        .withHttpApp(Logger.httpApp(true, true)(routes.orNotFound))
+        // .withHttpApp(Logger.httpApp(logHeaders = true, logBody = true)(routes.orNotFound))
+        .withHttpApp(routes.orNotFound)
         .withShutdownTimeout(1.seconds)
         .build
     )
@@ -39,9 +40,9 @@ object ServerRoutes {
   private val dsl = Http4sDsl[IO]
   def rpcRoutes(): HttpRoutes[IO] = {
     import chameleon.ext.upickle.*
-    val slothRouter = sloth.Router[String, IO].route[rpc.RpcApi](RpcApiImpl)
-
-    HttpRpcRoutes.apply[String, IO](slothRouter)
+    HttpRpcRoutes.withRequest[String, IO] { (request: Request[IO]) =>
+      sloth.Router[String, IO].route[rpc.RpcApi](RpcApiImpl(request))
+    }
   }
 
   // def slothRpcRoutes(): HttpRoutes[IO] = {

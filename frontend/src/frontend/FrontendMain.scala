@@ -16,17 +16,31 @@ object Main extends IOApp.Simple {
     val count = Var(0)
     val myComponent = {
       div(
-        "Hello World, rpc: ",
-        count,
-        Rx { RpcClient.call.fun(count()) },
-        button("click", onClick.foreach(count.update(_ + 1))),
         authControl,
+        createMessage,
+        inbox,
       )
     }
 
     // render the component into the <div id="app"></div> in index.html
     Outwatch.renderReplace[IO]("#app", myComponent)
   }
+}
+
+def createMessage = {
+  val messageString = Var("")
+  div(
+    input(tpe := "text", placeholder := "type message", value <-- messageString, onInput.value --> messageString),
+    button("create", onClick.foreachEffect(_ => RpcClient.call.create(messageString.now()).void)),
+  )
+}
+
+def inbox = {
+  div(
+    lift {
+      unlift(RpcClient.call.getInbox()).map(message => div(message.content))
+    }
+  )
 }
 
 def authControl = {
@@ -40,13 +54,13 @@ def authControl = {
     button(
       "Register",
       onClick.doEffect {
-        authn.signup(Credentials(username = "est", password = "wolfgang254!!??"))
+        RpcClient.call.register(username = "u2", password = "wolfgang254!!??")
       },
     ),
     button(
       "Login",
       onClick.doEffect {
-        authn.login(Credentials(username = "est", password = "wolfgang254!!??"))
+        authn.login(Credentials(username = "u2", password = "wolfgang254!!??"))
       },
     ),
     b(authn.session),

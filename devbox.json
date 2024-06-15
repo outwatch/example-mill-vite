@@ -6,6 +6,7 @@
     "mill@latest",
     "bun@latest",
     "sqlite-interactive@latest",
+    "entr@latest",
   ],
 }
 // this file supports comments

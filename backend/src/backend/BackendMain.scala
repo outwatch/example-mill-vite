@@ -7,13 +7,15 @@ import cps.monads.catsEffect.{*, given}
 val jdbcUrl = "jdbc:sqlite:data.db?foreign_keys=ON"
 
 object BackendMain extends IOApp.Simple {
-  val x = 7
-  val y = x
+  val minimumLevel = Option(System.getenv("LOG_LEVEL"))
+  scribe.Logger.system.installJUL()
+  scribe.Logger.root.withMinimumLevel(minimumLevel.fold(scribe.Level.Info)(scribe.Level.apply)).replace()
+
   def run: IO[Unit] = async[IO] {
     println("backend starting")
     val appConfig = AppConfig.fromEnv()
     println("migrating")
-    await(DbMigrations.migrate(jdbcUrl))
+    // await(DbMigrations.migrate(jdbcUrl))
 
 //    Woo.runQueryBench()
 
