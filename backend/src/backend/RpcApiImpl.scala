@@ -72,7 +72,7 @@ class RpcApiImpl(request: Request[IO]) extends rpc.RpcApi {
   def send(messageId: Int, deviceId: String): IO[Unit] = withDevice(accountId =>
     IO {
       magnum.connect(ds) {
-        db.InboxRepo.insert(db.Inbox.Creator(messageId, deviceId))
+        db.InboxRepo.update(db.Inbox(messageId, deviceId))
       }
     }
   )
