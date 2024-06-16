@@ -10,7 +10,7 @@ trait RpcApi {
   def create(content: String): IO[Unit]
   def getInbox(): IO[Vector[Message]]
   def getPublicDeviceId(): IO[String]
-  def trust(contactPublicDeviceId: String): IO[Unit]
+  def trust(contactPublicDeviceId: String): IO[Boolean]
 }
 
 case class Message(messageId: Int, content: String) derives ReadWriter

@@ -100,10 +100,16 @@ class RpcApiImpl(request: Request[IO]) extends rpc.RpcApi {
 
   def getPublicDeviceId(): IO[String] = withDevice(deviceProfile => IO.pure(deviceProfile.publicDeviceId))
 
-  def trust(contactDeviceId: String): IO[Unit] = withDevice(deviceProfile =>
+  def trust(contactPublicDeviceId: String): IO[Boolean] = withDevice(deviceProfile =>
     IO {
-      magnum.connect(ds) {
-        db.TrustRepo.insert(db.Trust.Creator(deviceId = deviceProfile.deviceId, contactDeviceId = contactDeviceId))
+      magnum.transact(ds) {
+        db.DeviceProfileRepo.findByIndexOnPublicDeviceId(contactPublicDeviceId) match {
+          case Some(contactDeviceProfile) =>
+            db.TrustRepo.insert(db.Trust.Creator(deviceId = deviceProfile.deviceId, contactDeviceId = contactDeviceProfile.deviceId))
+            true
+          case None =>
+            false
+        }
       }
     }
   )
