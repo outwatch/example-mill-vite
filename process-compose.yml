@@ -32,19 +32,19 @@ processes:
   db-seed:
     command: echo schema.sql | entr -n bash -c "echo seeding database...; rm -f data.db; sqlite3 -init /dev/null data.db < schema.sql && echo success."
 
-  auth:
-    command: |
-      docker run -p 3000:3000 -p 3001:3001 \
-        -v authn-data:/data \
-        -e APP_DOMAINS="localhost" \
-        -e AUTHN_URL="http://localhost:3000" \
-        -e PORT=3001 \
-        -e PUBLIC_PORT=3000 \
-        -e SECRET_KEY_BASE="test" \
-        -e DATABASE_URL="sqlite3://localhost//data/authn.db" \
-        -e ENABLE_SIGNUP=false \
-        -e HTTP_AUTH_USERNAME="admin" \
-        -e HTTP_AUTH_PASSWORD="adminpw" \
-        keratin/authn-server:latest \
-        sh -c "./authn migrate && ./authn server"
-
+  # auth:
+  #   command: |
+  #     docker run -p 3000:3000 -p 3001:3001 \
+  #       -v authn-data:/data \
+  #       -e APP_DOMAINS="localhost" \
+  #       -e AUTHN_URL="http://localhost:3000" \
+  #       -e PORT=3001 \
+  #       -e PUBLIC_PORT=3000 \
+  #       -e SECRET_KEY_BASE="test" \
+  #       -e DATABASE_URL="sqlite3://localhost//data/authn.db" \
+  #       -e ENABLE_SIGNUP=false \
+  #       -e HTTP_AUTH_USERNAME="admin" \
+  #       -e HTTP_AUTH_PASSWORD="adminpw" \
+  #       keratin/authn-server:latest \
+  #       sh -c "./authn migrate && ./authn server"
+  #

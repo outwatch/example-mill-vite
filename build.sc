@@ -48,6 +48,7 @@ object frontend extends AppScalaJSModule {
     ivy"org.http4s::http4s-dom::0.2.11",
     ivy"com.github.cornerman::sloth-http4s-client::${versions.sloth}",
     ivy"com.github.cornerman::keratin-authn-frontend::${versions.authn}",
+    ivy"org.scala-js:scalajs-java-securerandom_sjs1_2.13:1.0.0",
   )
 
   def scalacOptions = T {
