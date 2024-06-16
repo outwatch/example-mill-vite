@@ -10,7 +10,7 @@ import org.sqlite.SQLiteDataSource
 import com.augustnagro.magnum
 import com.augustnagro.magnum.*
 import io.github.arainko.ducktape.*
-import rpc.generateSecureKey
+import rpc.{generateSecureKey, PublicDeviceProfile}
 // import org.http4s.ember.client.EmberClientBuilder
 // import cats.effect.unsafe.implicits.global // TODO
 // import scala.util.control.NonFatal
@@ -69,10 +69,16 @@ class RpcApiImpl(request: Request[IO]) extends rpc.RpcApi {
     }
   }
 
-  def send(messageId: Int, deviceId: String): IO[Unit] = withDevice(accountId =>
+  def send(messageId: Int, publicDeviceId: String): IO[Unit] = withDevice(accountId =>
     IO {
-      magnum.connect(ds) {
-        db.InboxRepo.update(db.Inbox(messageId, deviceId))
+      magnum.transact(ds) {
+        db.DeviceProfileRepo.findByIndexOnPublicDeviceId(publicDeviceId) match {
+          case Some(deviceProfile) =>
+            db.InboxRepo.update(db.Inbox(messageId, deviceId = deviceProfile.deviceId))
+            true
+          case None =>
+            false
+        }
       }
     }
   )
@@ -113,4 +119,17 @@ class RpcApiImpl(request: Request[IO]) extends rpc.RpcApi {
       }
     }
   )
+
+  override def getContacts: IO[Vector[PublicDeviceProfile]] = withDevice { deviceProfile =>
+    IO {
+      magnum.connect(ds) {
+        val publicDeviceIds =
+          sql"""select device_profile.public_device_id from trust inner join device_profile on trust.contact_device_id = device_profile.device_id"""
+            .query[String]
+            .run()
+        publicDeviceIds.map(PublicDeviceProfile(_))
+      }
+    }
+
+  }
 }

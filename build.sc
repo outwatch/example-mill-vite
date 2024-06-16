@@ -4,6 +4,7 @@ import $repo.`https://oss.sonatype.org/content/repositories/snapshots`
 import $repo.`https://oss.sonatype.org/content/repositories/public`
 
 import $ivy.`com.github.cornerman::mill-db-codegen:0.4.1+2-918d6203-SNAPSHOT`, dbcodegen.plugin._
+import $ivy.`com.github.cornerman::mill-web-components-codegen:0.0.0+14-85443756-SNAPSHOT`, webcodegen.plugin._
 
 import mill.scalajslib._
 import mill.scalajslib.api._
@@ -35,7 +36,7 @@ trait AppScalaJSModule extends AppScalaModule with ScalaJSModule {
   def scalaJSVersion = "1.16.0"
 }
 
-object frontend extends AppScalaJSModule {
+object frontend extends AppScalaJSModule with WebCodegenModule {
   def moduleKind       = ModuleKind.ESModule
   def moduleSplitStyle = ModuleSplitStyle.SmallModulesFor(List("frontend"))
 
@@ -55,6 +56,15 @@ object frontend extends AppScalaJSModule {
     // vite serves source maps from the out-folder. Fix the relative path to the source files:
     super.scalacOptions() ++ Seq(s"-scalajs-mapSourceURI:${T.workspace.toIO.toURI}->../../../.")
   }
+
+  override def webcodegenCustomElements = Seq(
+    webcodegen
+      .CustomElements("shoelace", (os.pwd / "node_modules" / "@shoelace-style" / "shoelace" / "dist" / "custom-elements.json").toIO),
+    webcodegen.CustomElements("emojipicker", (os.pwd / "node_modules" / "emoji-picker-element" / "custom-elements.json").toIO),
+  )
+  override def webcodegenTemplates = Seq(
+    webcodegen.Template.Outwatch
+  )
 }
 
 object backend extends AppScalaModule with DbCodegenModule {
