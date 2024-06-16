@@ -10,10 +10,11 @@ import org.sqlite.SQLiteDataSource
 import com.augustnagro.magnum
 import com.augustnagro.magnum.*
 import io.github.arainko.ducktape.*
-import org.http4s.ember.client.EmberClientBuilder
-import cats.effect.unsafe.implicits.global // TODO
-import scala.util.control.NonFatal
-import scala.concurrent.duration.*
+import rpc.generateSecureKey
+// import org.http4s.ember.client.EmberClientBuilder
+// import cats.effect.unsafe.implicits.global // TODO
+// import scala.util.control.NonFatal
+// import scala.concurrent.duration.*
 
 // import authn.backend.TokenVerifier
 // import authn.backend.AuthnClient
@@ -23,7 +24,7 @@ import scala.concurrent.duration.*
 class RpcApiImpl(request: Request[IO]) extends rpc.RpcApi {
 
   val headers: Option[Authorization] = request.headers.get[Authorization]
-  val deviceToken: Option[String]    = headers.collect { case Authorization(Credentials.Token(AuthScheme.Bearer, token)) => token }
+  val deviceId: Option[String]       = headers.collect { case Authorization(Credentials.Token(AuthScheme.Bearer, token)) => token }
   println(request.headers)
 
   // Authn integration
@@ -47,14 +48,26 @@ class RpcApiImpl(request: Request[IO]) extends rpc.RpcApi {
   //   case None            => IO.raiseError(Exception("403 Unauthorized"))
   // }
   //
-  println(deviceToken)
-
-  def withDevice[T](code: String => IO[T]): IO[T] = deviceToken match {
-    case Some(deviceToken) => code(deviceToken)
-    case None              => IO.raiseError(Exception("403 Unauthorized"))
-  }
 
   val ds = SQLiteDataSource().tap(_.setUrl("jdbc:sqlite:data.db?foreign_keys=ON"))
+
+  def withDevice[T](code: db.DeviceProfile => IO[T]): IO[T] = deviceId match {
+    case Some(deviceId) =>
+      magnum.connect(ds) {
+        db.DeviceProfileRepo.findById(deviceId)
+      } match {
+        case Some(profile) => code(profile)
+        case None          => IO.raiseError(Exception("403 Unauthorized"))
+      }
+
+    case None => IO.raiseError(Exception("403 Unauthorized"))
+  }
+
+  def registerDevice(deviceId: String): IO[Unit] = IO {
+    magnum.connect(ds) {
+      db.DeviceProfileRepo.insert(db.DeviceProfile.Creator(deviceId = deviceId, publicDeviceId = "p-" + generateSecureKey(10)))
+    }
+  }
 
   def send(messageId: Int, deviceId: String): IO[Unit] = withDevice(accountId =>
     IO {
@@ -64,29 +77,33 @@ class RpcApiImpl(request: Request[IO]) extends rpc.RpcApi {
     }
   )
 
-  def create(content: String): IO[Unit] = withDevice(deviceId =>
+  def create(content: String): IO[Unit] = withDevice(deviceProfile =>
     IO {
       magnum.transact(ds) {
         val message = db.MessageRepo.insertReturning(db.Message.Creator(content))
-        db.InboxRepo.insert(db.Inbox.Creator(messageId = message.messageId, deviceId = deviceId))
+        db.InboxRepo.insert(db.Inbox.Creator(messageId = message.messageId, deviceId = deviceProfile.deviceId))
       }
     }
   )
 
-  def getInbox(): IO[Vector[rpc.Message]] = withDevice(deviceId =>
+  def getInbox(): IO[Vector[rpc.Message]] = withDevice(deviceProfile =>
     IO {
       magnum.connect(ds) {
         val dbMessages =
-          sql"select message_id, content from inbox join message using(message_id) where device_id = ${deviceId}".query[db.Message].run()
+          sql"select message_id, content from inbox join message using(message_id) where device_id = ${deviceProfile.deviceId}"
+            .query[db.Message]
+            .run()
         dbMessages.map(_.to[rpc.Message])
       }
     }
   )
 
-  def trust(contactDeviceId: String): IO[Unit] = withDevice(deviceId =>
+  def getPublicDeviceId(): IO[String] = withDevice(deviceProfile => IO.pure(deviceProfile.publicDeviceId))
+
+  def trust(contactDeviceId: String): IO[Unit] = withDevice(deviceProfile =>
     IO {
       magnum.connect(ds) {
-        db.ContactsRepo.insert(db.Contacts.Creator(deviceId = deviceId, contactDeviceId = contactDeviceId))
+        db.TrustRepo.insert(db.Trust.Creator(deviceId = deviceProfile.deviceId, contactDeviceId = contactDeviceId))
       }
     }
   )

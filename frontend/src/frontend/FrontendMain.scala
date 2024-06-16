@@ -8,11 +8,22 @@ import colibri.*
 import colibri.reactive.*
 import authn.frontend.*
 import authn.frontend.authnJS.keratinAuthn.distTypesMod.Credentials
+import org.scalajs.dom.window.localStorage
 
 // Outwatch documentation: https://outwatch.github.io/docs/readme.html
 
 object Main extends IOApp.Simple {
-  def run = {
+  def run = lift {
+
+    val deviceIdOpt = unlift(RpcClient.getDeviceId)
+    deviceIdOpt match {
+      case Some(deviceId) =>
+      case None =>
+        val deviceId = rpc.generateSecureKey(10)
+        localStorage.setItem("deviceId", deviceId)
+        unlift(RpcClient.call.registerDevice(deviceId))
+    }
+
     val count = Var(0)
     val myComponent = {
       div(
@@ -22,7 +33,7 @@ object Main extends IOApp.Simple {
     }
 
     // render the component into the <div id="app"></div> in index.html
-    Outwatch.renderReplace[IO]("#app", myComponent)
+    unlift(Outwatch.renderReplace[IO]("#app", myComponent))
   }
 }
 

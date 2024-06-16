@@ -1,6 +1,6 @@
 create table device_profile(
   device_id text not null primary key,
-  device_name text not null
+  public_device_id text not null unique
 ) strict;
 
 create table message(
@@ -14,7 +14,8 @@ create table inbox(
 ) strict;
 create index idx_inbox_device_id on inbox(device_id);
 
-create table contacts(
+
+create table trust(
   device_id text not null,
   contact_device_id text not null,
   unique(device_id, contact_device_id)

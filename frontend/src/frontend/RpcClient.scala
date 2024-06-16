@@ -9,7 +9,6 @@ import org.http4s.headers.Authorization
 import org.http4s.Credentials
 import org.http4s.AuthScheme
 import org.scalajs.dom.window.localStorage
-import java.security.SecureRandom
 
 // import authn.frontend.AuthnClient
 // import authn.frontend.AuthnClientConfig
@@ -24,19 +23,15 @@ object RpcClient {
   //   Headers(authHeader.toSeq)
   // }
 
-  val deviceId = Option(localStorage.getItem("deviceId")).getOrElse(generateSecureKey(10))
-  localStorage.setItem("deviceId", deviceId)
+  val getDeviceId = IO(Option(localStorage.getItem("deviceId")))
 
-  val headers: IO[Headers] = IO(Headers(List(Authorization(Credentials.Token(AuthScheme.Bearer, deviceId)))))
+  val headers: IO[Headers] = lift {
+    Headers(unlift(getDeviceId).map(deviceId => Authorization(Credentials.Token(AuthScheme.Bearer, deviceId))).toList)
+  }
 
   private val httpConfig    = headers.map(headers => HttpRequestConfig(headers = headers))
   private val fetchClient   = FetchClientBuilder[IO].create
   private val requestClient = sloth.Client[String, IO](HttpRpcTransport(fetchClient, httpConfig))
 
   val call: rpc.RpcApi = requestClient.wire[rpc.RpcApi]
-}
-
-def generateSecureKey(length: Int): String = {
-  val random = new SecureRandom()
-  IArray.tabulate(length)(_ => wordList(random.nextInt(wordList.length))).mkString("-")
 }

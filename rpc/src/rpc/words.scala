@@ -1,4 +1,4 @@
-package frontend
+package rpc
 
 val wordList = IArray(
   "that",
