@@ -14,15 +14,15 @@ create table message(
 create index idx_message_on_device on message(on_device);
 
 create table message_history(
-  created_at int not null default (unixepoch('subsec')),
+  created_at int not null default (unixepoch('subsec') * 1000),
   message_id integer not null references message(message_id),
   on_device int,
   at_place text, -- TODO: geo coordinate with spatial index
   check ((on_device is null) <> (at_place is null))
 ) strict;
 
-create table trust(
-  source_device_id int not null,
-  target_device_id int not null,
-  unique(source_device_id, target_device_id) -- TODO: additional index with reversed order
+create table contact(
+  device_id int not null,
+  contact_device_id int not null,
+  unique(device_id, contact_device_id) -- TODO: additional index with reversed order
 ) strict;

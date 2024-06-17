@@ -10,10 +10,7 @@ import org.sqlite.SQLiteDataSource
 import com.augustnagro.magnum
 import com.augustnagro.magnum.*
 import io.github.arainko.ducktape.*
-import rpc.{generateSecureKey, PublicDeviceProfile}
-import scala.util.Try
-import scala.util.Success
-import scala.util.Failure
+import rpc.generateSecureDeviceAddress
 // import org.http4s.ember.client.EmberClientBuilder
 // import cats.effect.unsafe.implicits.global // TODO
 // import scala.util.control.NonFatal
@@ -54,10 +51,10 @@ class RpcApiImpl(request: Request[IO]) extends rpc.RpcApi {
 
   val ds = SQLiteDataSource().tap(_.setUrl("jdbc:sqlite:data.db")).tap(_.setEnforceForeignKeys(true)).tap(_.setLoadExtension(true))
 
-  def withDevice[T](code: db.DeviceProfile => IO[T]): IO[T] = deviceId match {
-    case Some(deviceId) =>
+  def withDevice[T](code: db.DeviceProfile => IO[T]): IO[T] = deviceSecret match {
+    case Some(deviceSecret) =>
       magnum.connect(ds) {
-        db.DeviceProfileRepo.findById(deviceAddress)
+        db.DeviceProfileRepo.findByIndexOnDeviceSecret(deviceSecret)
       } match {
         case Some(profile) => code(profile)
         case None          => IO.raiseError(Exception("403 Unauthorized"))
@@ -68,20 +65,19 @@ class RpcApiImpl(request: Request[IO]) extends rpc.RpcApi {
 
   def registerDevice(deviceSecret: String): IO[Unit] = IO {
     magnum.connect(ds) {
-      ???
-      sql"insert into ${db.DeviceProfile.Table}(${db.DeviceProfile.Table.all}) values (${db.DeviceProfile.Creator(
-          deviceId = deviceId,
-          publicDeviceId = "p-" + generateSecureKey(10),
-        )}) on conflict(${db.DeviceProfile.Table.deviceId}) do nothing".update
+      sql"insert into ${db.DeviceProfile.Table}(${db.DeviceProfile.Table.deviceSecret}, ${db.DeviceProfile.Table.deviceAddress}) values (${db.DeviceProfile.Creator(
+          deviceSecret = deviceSecret,
+          deviceAddress = generateSecureDeviceAddress(10),
+        )}) on conflict(${db.DeviceProfile.Table.deviceSecret}) do nothing".update
         .run()
     }
   }
 
-  def send(messageId: Int, publicDeviceId: String): IO[Boolean] = withDevice(accountId =>
+  def sendMessage(messageId: Int, deviceAddress: String): IO[Boolean] = withDevice(deviceProfile =>
     IO {
       magnum.transact(ds) {
         lift[Option] {
-          val targetDeviceProfile = unlift(db.DeviceProfileRepo.findByIndexOnPublicDeviceId(publicDeviceId))
+          val targetDeviceProfile = unlift(db.DeviceProfileRepo.findByIndexOnDeviceAddress(deviceProfile.deviceAddress))
           val message             = unlift(db.MessageRepo.findById(messageId))
           db.MessageRepo.update(message.copy(onDevice = Some(targetDeviceProfile.deviceId)))
           db.MessageHistoryRepo.insert(
@@ -93,7 +89,7 @@ class RpcApiImpl(request: Request[IO]) extends rpc.RpcApi {
     }
   )
 
-  def create(content: String): IO[Unit] = withDevice(deviceProfile =>
+  def createMessage(content: String): IO[Unit] = withDevice(deviceProfile =>
     IO {
       magnum.transact(ds) {
         val message = db.MessageRepo.insertReturning(db.Message.Creator(content, onDevice = Some(deviceProfile.deviceId), atPlace = None))
@@ -110,14 +106,14 @@ class RpcApiImpl(request: Request[IO]) extends rpc.RpcApi {
     }
   )
 
-  def getPublicDeviceId: IO[String] = withDevice(deviceProfile => IO.pure(deviceProfile.publicDeviceId))
+  def getDeviceAddress: IO[String] = withDevice(deviceProfile => IO.pure(deviceProfile.deviceAddress))
 
-  def trust(contactPublicDeviceId: String): IO[Boolean] = withDevice(deviceProfile =>
+  def addContact(contactDeviceAddress: String): IO[Boolean] = withDevice(deviceProfile =>
     IO {
       magnum.transact(ds) {
-        db.DeviceProfileRepo.findByIndexOnPublicDeviceId(contactPublicDeviceId) match {
+        db.DeviceProfileRepo.findByIndexOnDeviceAddress(contactDeviceAddress) match {
           case Some(contactDeviceProfile) =>
-            db.TrustRepo.insert(db.Trust.Creator(deviceId = deviceProfile.deviceId, contactDeviceId = contactDeviceProfile.deviceId))
+            db.ContactRepo.insert(db.Contact.Creator(deviceId = deviceProfile.deviceId, contactDeviceId = contactDeviceProfile.deviceId))
             true
           case None =>
             false
@@ -126,14 +122,14 @@ class RpcApiImpl(request: Request[IO]) extends rpc.RpcApi {
     }
   )
 
-  override def getContacts: IO[Vector[PublicDeviceProfile]] = withDevice { deviceProfile =>
+  override def getContacts: IO[Vector[String]] = withDevice { deviceProfile =>
     IO {
       magnum.connect(ds) {
-        val publicDeviceIds =
-          sql"""select device_profile.public_device_id from trust inner join device_profile on trust.contact_device_id = device_profile.device_id"""
+        val deviceAddresses =
+          sql"""select device_profile.device_address from trust inner join device_profile on trust.target_device_id = device_profile.device_id where trus"""
             .query[String]
             .run()
-        publicDeviceIds.map(PublicDeviceProfile(_))
+        deviceAddresses
       }
     }
 

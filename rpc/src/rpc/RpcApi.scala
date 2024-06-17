@@ -9,23 +9,21 @@ trait RpcApi {
 
   def getDeviceAddress: IO[String]
   def getOnDeviceMessages: IO[Vector[Message]]
-  def getContacts: IO[Vector[PublicDeviceProfile]]
+  def getContacts: IO[Vector[String]]
 
-  def send(messageId: Int, deviceAddress: String): IO[Boolean]
-  def create(content: String): IO[Unit]
-  def trust(deviceAddress: String): IO[Boolean]
+  def sendMessage(messageId: Int, deviceAddress: String): IO[Boolean]
+  def createMessage(content: String): IO[Unit]
+  def addContact(targetDeviceAddress: String): IO[Boolean]
 }
 
 case class Message(messageId: Int, content: String) derives ReadWriter
 
-case class PublicDeviceProfile(deviceAddress: String) derives ReadWriter
-
-def generateDeviceAddress(length: Int): String = {
+def generateSecureDeviceAddress(length: Int): String = {
   val random = new SecureRandom()
   IArray.tabulate(length)(_ => wordList(random.nextInt(wordList.length))).mkString("-")
 }
 
-def generateDeviceSecret(length: Int): String = {
+def generateSecureDeviceSecret(length: Int): String = {
   // TODO: UUID
   val chars  = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
   val random = new SecureRandom()

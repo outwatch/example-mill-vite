@@ -7,18 +7,18 @@ import outwatch.dsl.*
 import colibri.*
 import colibri.reactive.*
 import authn.frontend.*
-import authn.frontend.authnJS.keratinAuthn.distTypesMod.Credentials
 import org.scalajs.dom.window.localStorage
 import org.scalajs.dom
 import org.scalajs.dom.{window, Navigator, Position}
 import scala.scalajs.js
+// import authn.frontend.authnJS.keratinAuthn.distTypesMod.Credentials
 
 // Outwatch documentation: https://outwatch.github.io/docs/readme.html
 
 object Main extends IOApp.Simple {
   def run = lift {
 
-    val deviceSecret = unlift(RpcClient.getDeviceSecret).getOrElse(rpc.generateDeviceSecret(10))
+    val deviceSecret = unlift(RpcClient.getDeviceSecret).getOrElse(rpc.generateSecureDeviceSecret(10))
     localStorage.setItem("deviceSecret", deviceSecret)
     unlift(RpcClient.call.registerDevice(deviceSecret))
 
@@ -32,9 +32,9 @@ object Main extends IOApp.Simple {
     val myComponent = {
       div(
         addContact,
-        showPublicDeviceId,
+        showDeviceAddress,
         createMessage(refreshTrigger),
-        inbox(refreshTrigger),
+        messagesOnDevice(refreshTrigger),
         // camera,
       )
     }
@@ -86,21 +86,21 @@ def createMessage(refreshTrigger: VarEvent[Unit]) = {
 
   div(
     slInput(placeholder := "type message", value <-- messageString, onSlChange.map(_.target.value) --> messageString),
-    slButton("create", onClick.mapEffect(_ => RpcClient.call.create(messageString.now())).as(()) --> refreshTrigger),
+    slButton("create", onClick.mapEffect(_ => RpcClient.call.createMessage(messageString.now())).as(()) --> refreshTrigger),
   )
 }
 
-def showPublicDeviceId = {
+def showDeviceAddress = {
   import webcodegen.shoelace.SlCopyButton.{value as _, *}
   import webcodegen.shoelace.SlQrCode.*
 
   div(
     b("Your public device id"),
-    RpcClient.call.getPublicDeviceId.map { publicDeviceId =>
+    RpcClient.call.getDeviceAddress.map { deviceAddress =>
       VMod(
-        div(publicDeviceId),
-        slCopyButton(value := publicDeviceId),
-        slQrCode(value := publicDeviceId),
+        div(deviceAddress),
+        slCopyButton(value := deviceAddress),
+        slQrCode(value := deviceAddress),
       )
     },
   )
@@ -110,20 +110,20 @@ def addContact = {
   import webcodegen.shoelace.SlInput.{value as _, *}
   import webcodegen.shoelace.SlButton.{value as _, *}
 
-  val contactPublicDeviceId = Var("")
+  val contactDeviceAddress = Var("")
 
   div(
     display.flex,
     slInput(
       placeholder := "Public device id of contact",
-      value <-- contactPublicDeviceId,
-      onSlChange.map(_.target.value) --> contactPublicDeviceId,
+      value <-- contactDeviceAddress,
+      onSlChange.map(_.target.value) --> contactDeviceAddress,
     ),
-    slButton("Add", onClick(contactPublicDeviceId).foreachEffect(RpcClient.call.trust(_).void)),
+    slButton("Add", onClick(contactDeviceAddress).foreachEffect(RpcClient.call.addContact(_).void)),
   )
 }
 
-def inbox(refreshTrigger: RxEvent[Unit]) = {
+def messagesOnDevice(refreshTrigger: RxEvent[Unit]) = {
   import webcodegen.shoelace.SlButton.{value as _, *}
   import webcodegen.shoelace.SlSelect.{onSlFocus as _, onSlBlur as _, onSlAfterHide as _, open as _, *}
   import webcodegen.shoelace.SlOption.{value as _, *}
@@ -132,18 +132,18 @@ def inbox(refreshTrigger: RxEvent[Unit]) = {
 
   val contacts = RxLater.effect(RpcClient.call.getContacts)
 
-  val inboxStream = refreshTrigger.observable.prepend(()).asEffect(RpcClient.call.getOnDeviceMessages)
+  val onDeviceMessagesStream = refreshTrigger.observable.prepend(()).asEffect(RpcClient.call.getOnDeviceMessages)
 
   val selectedProfile = VarLater[String]()
 
   div(
     checked := true,
-    inboxStream.map(_.map { message =>
+    onDeviceMessagesStream.map(_.map { message =>
       val openDialog = Var(false)
       div(
         display.flex,
         div(message.content),
-        slButton("Send to contact", onClick.as(true) --> openDialog),
+        slButton("Send to device", onClick.as(true) --> openDialog),
         slDialog(
           open <-- openDialog,
           onSlAfterHide.onlyOwnEvents.as(false) --> openDialog,
@@ -152,15 +152,15 @@ def inbox(refreshTrigger: RxEvent[Unit]) = {
             height := "500px",
             slSelect(
               onSlChange.map(_.target.value).collect { case s: String => s } --> selectedProfile,
-              contacts.map(_.map { contact =>
-                slOption(value := contact.publicDeviceId, contact.publicDeviceId)
+              contacts.map(_.map { deviceAddress =>
+                slOption(value := deviceAddress, deviceAddress)
               }),
             ),
           ),
           div(
             slotFooter,
             display.flex,
-            slButton("Send to contact", onClick(selectedProfile).foreachEffect(RpcClient.call.send(message.messageId, _).void)),
+            slButton("Send to contact", onClick(selectedProfile).foreachEffect(RpcClient.call.sendMessage(message.messageId, _).void)),
           ),
         ),
       )
