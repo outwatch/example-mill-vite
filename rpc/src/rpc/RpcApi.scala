@@ -8,8 +8,8 @@ trait RpcApi {
   def registerDevice(deviceId: String): IO[Unit]
   def send(messageId: Int, publicDeviceId: String): IO[Unit]
   def create(content: String): IO[Unit]
-  def getInbox(): IO[Vector[Message]]
-  def getPublicDeviceId(): IO[String]
+  def getInbox: IO[Vector[Message]]
+  def getPublicDeviceId: IO[String]
   def getContacts: IO[Vector[PublicDeviceProfile]]
   def trust(contactPublicDeviceId: String): IO[Boolean]
 }

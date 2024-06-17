@@ -49,7 +49,7 @@ class RpcApiImpl(request: Request[IO]) extends rpc.RpcApi {
   // }
   //
 
-  val ds = SQLiteDataSource().tap(_.setUrl("jdbc:sqlite:data.db?foreign_keys=ON"))
+  val ds = SQLiteDataSource().tap(_.setUrl("jdbc:sqlite:data.db")).tap(_.setEnforceForeignKeys(true)).tap(_.setLoadExtension(true))
 
   def withDevice[T](code: db.DeviceProfile => IO[T]): IO[T] = deviceId match {
     case Some(deviceId) =>
@@ -92,7 +92,7 @@ class RpcApiImpl(request: Request[IO]) extends rpc.RpcApi {
     }
   )
 
-  def getInbox(): IO[Vector[rpc.Message]] = withDevice(deviceProfile =>
+  def getInbox: IO[Vector[rpc.Message]] = withDevice(deviceProfile =>
     IO {
       magnum.connect(ds) {
         val dbMessages =
@@ -104,7 +104,7 @@ class RpcApiImpl(request: Request[IO]) extends rpc.RpcApi {
     }
   )
 
-  def getPublicDeviceId(): IO[String] = withDevice(deviceProfile => IO.pure(deviceProfile.publicDeviceId))
+  def getPublicDeviceId: IO[String] = withDevice(deviceProfile => IO.pure(deviceProfile.publicDeviceId))
 
   def trust(contactPublicDeviceId: String): IO[Boolean] = withDevice(deviceProfile =>
     IO {

@@ -32,13 +32,15 @@ object Main extends IOApp.Simple {
 //      Cancelable(() => window.navigator.geolocation.clearWatch(watchId))
 //    }
 
-    val count = Var(0)
+    val refreshTrigger = VarEvent[Unit]()
+
     val myComponent = {
       div(
         addContact,
         showPublicDeviceId,
-        createMessage,
-        inbox,
+        createMessage(refreshTrigger),
+        inbox(refreshTrigger),
+        camera,
       )
     }
 
@@ -47,15 +49,49 @@ object Main extends IOApp.Simple {
   }
 }
 
-def createMessage = {
+def camera = {
+  val detector = BarcodeDetector(new {
+    formats = js.Array("qr_code")
+  })
+
+  video(
+    height := "200px",
+    width := "200px",
+    VMod.attr[Boolean]("autoplay", identity) := true,
+    VMod.prop("srcObject") <-- RxLater.future(
+      window.navigator.mediaDevices
+        .getUserMedia(new {
+          video = true
+          audio = false
+        })
+        .toFuture
+    ),
+    onDomMount
+      .transform(x =>
+        Observable
+          .intervalMillis(100)
+          .switchMap(_ =>
+            x.mapFuture { element =>
+              println("DETECTING...")
+              detector.detect(element).toFuture
+            }
+          )
+      )
+      .foreach { result =>
+        println(result.map(_.rawValue).mkString(", "))
+      },
+  )
+}
+
+def createMessage(refreshTrigger: VarEvent[Unit]) = {
   import webcodegen.shoelace.SlButton.{value as _, *}
   import webcodegen.shoelace.SlInput.{value as _, *}
 
-  val messageString = Var("")
+  val messageString = Var("").transformVarRead(rx => Rx.observableSync(rx.observable.merge(refreshTrigger.observable.as(""))))
 
   div(
     slInput(placeholder := "type message", value <-- messageString, onSlChange.map(_.target.value) --> messageString),
-    slButton("create", onClick.foreachEffect(_ => RpcClient.call.create(messageString.now()).void)),
+    slButton("create", onClick.mapEffect(_ => RpcClient.call.create(messageString.now())).as(()) --> refreshTrigger),
   )
 }
 
@@ -65,7 +101,7 @@ def showPublicDeviceId = {
 
   div(
     b("Your public device id"),
-    RpcClient.call.getPublicDeviceId().map { publicDeviceId =>
+    RpcClient.call.getPublicDeviceId.map { publicDeviceId =>
       VMod(
         div(publicDeviceId),
         slCopyButton(value := publicDeviceId),
@@ -92,23 +128,25 @@ def addContact = {
   )
 }
 
-def inbox = lift[IO] {
+def inbox(refreshTrigger: RxEvent[Unit]) = {
   import webcodegen.shoelace.SlButton.{value as _, *}
   import webcodegen.shoelace.SlSelect.{onSlFocus as _, onSlBlur as _, onSlAfterHide as _, open as _, *}
   import webcodegen.shoelace.SlOption.{value as _, *}
   import webcodegen.shoelace.SlDialog.*
   import webcodegen.shoelace.SlDialog
 
-  val contacts = unlift(RpcClient.call.getContacts)
+  val contacts = RxLater.effect(RpcClient.call.getContacts)
+
+  val inboxStream = refreshTrigger.observable.prepend(()).asEffect(RpcClient.call.getInbox)
 
   val selectedProfile = VarLater[String]()
 
   div(
     checked := true,
-    display.flex,
-    unlift(RpcClient.call.getInbox()).map { message =>
+    inboxStream.map(_.map { message =>
       val openDialog = Var(false)
-      VMod(
+      div(
+        display.flex,
         div(message.content),
         slButton("Send to contact", onClick.as(true) --> openDialog),
         slDialog(
@@ -119,9 +157,9 @@ def inbox = lift[IO] {
             height := "500px",
             slSelect(
               onSlChange.map(_.target.value).collect { case s: String => s } --> selectedProfile,
-              contacts.map { contact =>
+              contacts.map(_.map { contact =>
                 slOption(value := contact.publicDeviceId, contact.publicDeviceId)
-              },
+              }),
             ),
           ),
           div(
@@ -131,6 +169,6 @@ def inbox = lift[IO] {
           ),
         ),
       )
-    },
+    }),
   )
 }
