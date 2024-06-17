@@ -6,11 +6,13 @@ import java.security.SecureRandom
 
 trait RpcApi {
   def registerDevice(deviceId: String): IO[Unit]
-  def send(messageId: Int, publicDeviceId: String): IO[Unit]
-  def create(content: String): IO[Unit]
-  def getInbox: IO[Vector[Message]]
+
   def getPublicDeviceId: IO[String]
+  def getOnDeviceMessages: IO[Vector[Message]]
   def getContacts: IO[Vector[PublicDeviceProfile]]
+
+  def send(messageId: Int, publicDeviceId: String): IO[Boolean]
+  def create(content: String): IO[Unit]
   def trust(contactPublicDeviceId: String): IO[Boolean]
 }
 

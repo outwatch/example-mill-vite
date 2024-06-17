@@ -11,6 +11,9 @@ import com.augustnagro.magnum
 import com.augustnagro.magnum.*
 import io.github.arainko.ducktape.*
 import rpc.{generateSecureKey, PublicDeviceProfile}
+import scala.util.Try
+import scala.util.Success
+import scala.util.Failure
 // import org.http4s.ember.client.EmberClientBuilder
 // import cats.effect.unsafe.implicits.global // TODO
 // import scala.util.control.NonFatal
@@ -65,20 +68,26 @@ class RpcApiImpl(request: Request[IO]) extends rpc.RpcApi {
 
   def registerDevice(deviceId: String): IO[Unit] = IO {
     magnum.connect(ds) {
-      db.DeviceProfileRepo.insert(db.DeviceProfile.Creator(deviceId = deviceId, publicDeviceId = "p-" + generateSecureKey(10)))
+      sql"insert into ${db.DeviceProfile.Table}(${db.DeviceProfile.Table.all}) values (${db.DeviceProfile.Creator(
+          deviceId = deviceId,
+          publicDeviceId = "p-" + generateSecureKey(10),
+        )}) on conflict(${db.DeviceProfile.Table.deviceId}) do nothing".update
+        .run()
     }
   }
 
-  def send(messageId: Int, publicDeviceId: String): IO[Unit] = withDevice(accountId =>
+  def send(messageId: Int, publicDeviceId: String): IO[Boolean] = withDevice(accountId =>
     IO {
       magnum.transact(ds) {
-        db.DeviceProfileRepo.findByIndexOnPublicDeviceId(publicDeviceId) match {
-          case Some(deviceProfile) =>
-            db.InboxRepo.update(db.Inbox(messageId, deviceId = deviceProfile.deviceId))
-            true
-          case None =>
-            false
-        }
+        lift[Option] {
+          val targetDeviceProfile = unlift(db.DeviceProfileRepo.findByIndexOnPublicDeviceId(publicDeviceId))
+          val message             = unlift(db.MessageRepo.findById(messageId))
+          db.MessageRepo.update(message.copy(onDevice = Some(targetDeviceProfile.deviceId)))
+          db.MessageHistoryRepo.insert(
+            db.MessageHistory.Creator(messageId = message.messageId, onDevice = Some(targetDeviceProfile.deviceId), atPlace = None)
+          )
+          true
+        }.getOrElse(false)
       }
     }
   )
@@ -86,19 +95,15 @@ class RpcApiImpl(request: Request[IO]) extends rpc.RpcApi {
   def create(content: String): IO[Unit] = withDevice(deviceProfile =>
     IO {
       magnum.transact(ds) {
-        val message = db.MessageRepo.insertReturning(db.Message.Creator(content))
-        db.InboxRepo.insert(db.Inbox.Creator(messageId = message.messageId, deviceId = deviceProfile.deviceId))
+        val message = db.MessageRepo.insertReturning(db.Message.Creator(content, onDevice = Some(deviceProfile.deviceId), atPlace = None))
       }
     }
   )
 
-  def getInbox: IO[Vector[rpc.Message]] = withDevice(deviceProfile =>
+  def getOnDeviceMessages: IO[Vector[rpc.Message]] = withDevice(deviceProfile =>
     IO {
       magnum.connect(ds) {
-        val dbMessages =
-          sql"select message_id, content from inbox join message using(message_id) where device_id = ${deviceProfile.deviceId}"
-            .query[db.Message]
-            .run()
+        val dbMessages = db.MessageRepo.findByIndexOnOnDevice(Some(deviceProfile.deviceId))
         dbMessages.map(_.to[rpc.Message])
       }
     }

@@ -18,14 +18,9 @@ import scala.scalajs.js
 object Main extends IOApp.Simple {
   def run = lift {
 
-    val deviceIdOpt = unlift(RpcClient.getDeviceId)
-    deviceIdOpt match {
-      case Some(deviceId) =>
-      case None =>
-        val deviceId = rpc.generateSecureKey(10)
-        localStorage.setItem("deviceId", deviceId)
-        unlift(RpcClient.call.registerDevice(deviceId))
-    }
+    val deviceId = unlift(RpcClient.getDeviceId).getOrElse(rpc.generateSecureKey(10))
+    localStorage.setItem("deviceId", deviceId)
+    unlift(RpcClient.call.registerDevice(deviceId))
 
 //    val positionObservable = Observable.create { observer =>
 //      val watchId = window.navigator.geolocation.watchPosition(position => observer.unsafeOnNext(position))
@@ -40,7 +35,7 @@ object Main extends IOApp.Simple {
         showPublicDeviceId,
         createMessage(refreshTrigger),
         inbox(refreshTrigger),
-        camera,
+        // camera,
       )
     }
 
@@ -137,7 +132,7 @@ def inbox(refreshTrigger: RxEvent[Unit]) = {
 
   val contacts = RxLater.effect(RpcClient.call.getContacts)
 
-  val inboxStream = refreshTrigger.observable.prepend(()).asEffect(RpcClient.call.getInbox)
+  val inboxStream = refreshTrigger.observable.prepend(()).asEffect(RpcClient.call.getOnDeviceMessages)
 
   val selectedProfile = VarLater[String]()
 
