@@ -28,7 +28,7 @@ object ${table.scalaName} {
   val Table = TableInfo[${table.scalaName}, ${table.scalaName}, ${table.scalaName}.Id]
   #else
   case class Creator(
-    #for (column <- table.columns if !column.db.isGenerated && !column.db.hasDefaultValue && !column.db.isAutoIncremented)
+    #for (column <- table.columns if !column.db.isGenerated && !column.db.hasDefaultValue && !column.db.isAutoIncremented && !(column.db.isPartOfPrimaryKey && column.scalaType == "Int"))
     ${column.scalaName}: ${column.scalaType},
     #end
   )

@@ -1,11 +1,11 @@
 create table device_profile(
-  device_id integer primary key autoincrement, -- rowid
+  device_id integer primary key, -- rowid
   device_secret text not null unique,
   device_address text not null unique
 ) strict;
 
 create table message(
-  message_id integer primary key autoincrement, -- rowid
+  message_id integer primary key, -- rowid
   content text not null unique,
   on_device int,
   at_place text, -- TODO: geo coordinate with spatial index
