@@ -3,6 +3,8 @@
 package backend.db
 
 import com.augustnagro.magnum.*
+import com.augustnagro.magnum.Spec as MSpec
+import scala.annotation.targetName
 
 #for (table <- schema.tables)
 
@@ -17,6 +19,7 @@ case class ${table.scalaName}(
   ${column.scalaName}: ${column.scalaType},
   #end
 ) derives DbCodec
+
 object ${table.scalaName} {
   #{ val primaryKeyColumns = table.columns.filter(_.db.isPartOfPrimaryKey)}#
   type Id = ${if (primaryKeyColumns.isEmpty) "Null" else primaryKeyColumns.map(_.scalaType).mkString("(", ", ", ")")}
@@ -31,6 +34,7 @@ object ${table.scalaName} {
   )
   val Table = TableInfo[${table.scalaName}.Creator, ${table.scalaName}, ${table.scalaName}.Id]
   #end
+  val Spec = MSpec[${table.scalaName}]
 }
 
 #if (table.isView)
@@ -38,18 +42,21 @@ object ${table.scalaName}Repo extends ImmutableRepo[${table.scalaName}, ${table.
 #else
 object ${table.scalaName}Repo extends Repo[${table.scalaName}.Creator, ${table.scalaName}, ${table.scalaName}.Id] {
 #end
+    #{
+    val indexPrefixes = table.indices.flatMap(index => index.columns.inits.filter(_.nonEmpty).map(prefix => (prefix, Option.when(prefix.size == index.columns.size)(index)))).sortBy(!_._2.exists(_.db.isUnique)).distinctBy(_._1)
+    }#
 
-    #for (index <- table.indices)
-    def findByIndexOn${index.columns.map(_.scalaName.stripPrefix("`").stripSuffix("`").capitalize).mkString}(
-      #for (column <- index.columns)
+    #for ((indexPrefix,indexOpt) <- indexPrefixes)
+    def findByIndexOn${indexPrefix.map(_.scalaName.stripPrefix("`").stripSuffix("`").capitalize).mkString}(
+      #for (column <- indexPrefix)
       ${column.scalaName}: ${column.scalaType},
       #end
-    )(using DbCon): ${if (index.db.isUnique) "Option" else "Vector"}[${table.scalaName}] = {
+    )(using DbCon): ${if (indexOpt.exists(_.db.isUnique)) "Option" else "Vector"}[${table.scalaName}] = {
         val spec = Spec[${table.scalaName}]
-          #for (column <- index.columns)
+          #for (column <- indexPrefix)
           .where(sql"${column.name} = $${column.scalaName}")
           #end
-        findAll(spec)${if (index.db.isUnique) ".headOption" else ""}
+        findAll(spec)${if (indexOpt.exists(_.db.isUnique)) ".headOption" else ""}
     }
     #end
 }
