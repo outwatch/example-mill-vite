@@ -14,7 +14,7 @@ create table message(
 create index idx_message_on_device on message(on_device);
 
 create table message_history(
-  created_at int not null default (unixepoch('subsec') * 1000),
+  created_at_millis int not null default (unixepoch('subsec') * 1000),
   message_id integer not null references message(message_id),
   on_device int,
   at_place text, -- TODO: geo coordinate with spatial index

@@ -22,10 +22,3 @@ def generateSecureDeviceAddress(length: Int): String = {
   val random = new SecureRandom()
   IArray.tabulate(length)(_ => wordList(random.nextInt(wordList.length))).mkString("-")
 }
-
-def generateSecureDeviceSecret(length: Int): String = {
-  // TODO: UUID
-  val chars  = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
-  val random = new SecureRandom()
-  IArray.fill(length)(chars(random.nextInt(chars.length))).mkString
-}

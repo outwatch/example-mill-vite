@@ -18,7 +18,7 @@ import scala.scalajs.js
 object Main extends IOApp.Simple {
   def run = lift {
 
-    val deviceSecret = unlift(RpcClient.getDeviceSecret).getOrElse(rpc.generateSecureDeviceSecret(10))
+    val deviceSecret = unlift(RpcClient.getDeviceSecret).getOrElse(java.util.UUID.randomUUID().toString)
     localStorage.setItem("deviceSecret", deviceSecret)
     unlift(RpcClient.call.registerDevice(deviceSecret))
 
@@ -30,11 +30,16 @@ object Main extends IOApp.Simple {
     val refreshTrigger = VarEvent[Unit]()
 
     val myComponent = {
+      import webcodegen.shoelace.SlTab.*
+      import webcodegen.shoelace.SlTabGroup.*
+      import webcodegen.shoelace.SlTabPanel.*
       div(
-        addContact,
-        showDeviceAddress,
-        createMessage(refreshTrigger),
-        messagesOnDevice(refreshTrigger),
+        slTabGroup(
+          slTab("Messages", slotNav, panel := "messages"),
+          slTab("Contacts", slotNav, panel := "contacts"),
+          slTabPanel(name := "messages", messagesOnDevice(refreshTrigger), createMessage(refreshTrigger)),
+          slTabPanel(name := "contacts", addContact, showDeviceAddress),
+        )
         // camera,
       )
     }
