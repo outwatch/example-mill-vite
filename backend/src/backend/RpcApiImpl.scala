@@ -73,11 +73,11 @@ class RpcApiImpl(request: Request[IO]) extends rpc.RpcApi {
     }
   }
 
-  def sendMessage(messageId: Int, deviceAddress: String): IO[Boolean] = withDevice(deviceProfile =>
+  def sendMessage(messageId: Int, targetDeviceAddress: String): IO[Boolean] = withDevice(deviceProfile =>
     IO {
       magnum.transact(ds) {
         lift[Option] {
-          val targetDeviceProfile = unlift(db.DeviceProfileRepo.findByIndexOnDeviceAddress(deviceProfile.deviceAddress))
+          val targetDeviceProfile = unlift(db.DeviceProfileRepo.findByIndexOnDeviceAddress(targetDeviceAddress))
           val message             = unlift(db.MessageRepo.findById(messageId))
           db.MessageRepo.update(message.copy(onDevice = Some(targetDeviceProfile.deviceId)))
           db.MessageHistoryRepo.insert(
@@ -125,11 +125,8 @@ class RpcApiImpl(request: Request[IO]) extends rpc.RpcApi {
   override def getContacts: IO[Vector[String]] = withDevice { deviceProfile =>
     IO {
       magnum.connect(ds) {
-        val deviceAddresses =
-          sql"""select device_profile.device_address from trust inner join device_profile on trust.target_device_id = device_profile.device_id where trus"""
-            .query[String]
-            .run()
-        deviceAddresses
+        val contacts = db.ContactRepo.findByIndexOnDeviceId(deviceProfile.deviceId)
+        contacts.flatMap(contact => db.DeviceProfileRepo.findById(contact.contactDeviceId)).map(_.deviceAddress)
       }
     }
 
