@@ -3,8 +3,8 @@ import mill._, scalalib._, scalajslib._
 import $repo.`https://oss.sonatype.org/content/repositories/snapshots`
 import $repo.`https://oss.sonatype.org/content/repositories/public`
 
-import $ivy.`com.github.cornerman::mill-db-codegen:0.4.1+2-918d6203-SNAPSHOT`, dbcodegen.plugin._
-import $ivy.`com.github.cornerman::mill-web-components-codegen:0.0.0+14-85443756-SNAPSHOT`, webcodegen.plugin._
+import $ivy.`com.github.cornerman::mill-db-codegen:0.4.2`, dbcodegen.plugin._
+import $ivy.`com.github.cornerman::mill-web-components-codegen:0.1.1`, webcodegen.plugin._
 
 import mill.scalajslib._
 import mill.scalajslib.api._
@@ -12,7 +12,7 @@ import mill.scalajslib.api._
 trait AppScalaModule extends ScalaModule {
   def scalaVersion = "3.4.1"
   val versions = new {
-    val authn    = "0.1.2+8-c4db15bd-SNAPSHOT"
+    val authn    = "0.1.3"
     val colibri  = "0.8.4"
     val outwatch = "1.0.0"
     val sloth    = "0.7.4"
