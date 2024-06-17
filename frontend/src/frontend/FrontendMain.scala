@@ -18,9 +18,9 @@ import scala.scalajs.js
 object Main extends IOApp.Simple {
   def run = lift {
 
-    val deviceId = unlift(RpcClient.getDeviceId).getOrElse(rpc.generateSecureKey(10))
-    localStorage.setItem("deviceId", deviceId)
-    unlift(RpcClient.call.registerDevice(deviceId))
+    val deviceSecret = unlift(RpcClient.getDeviceSecret).getOrElse(rpc.generateDeviceSecret(10))
+    localStorage.setItem("deviceSecret", deviceSecret)
+    unlift(RpcClient.call.registerDevice(deviceSecret))
 
 //    val positionObservable = Observable.create { observer =>
 //      val watchId = window.navigator.geolocation.watchPosition(position => observer.unsafeOnNext(position))

@@ -23,10 +23,10 @@ object RpcClient {
   //   Headers(authHeader.toSeq)
   // }
 
-  val getDeviceId = IO(Option(localStorage.getItem("deviceId")))
+  val getDeviceSecret = IO(Option(localStorage.getItem("deviceSecret")))
 
   val headers: IO[Headers] = lift {
-    Headers(unlift(getDeviceId).map(deviceId => Authorization(Credentials.Token(AuthScheme.Bearer, deviceId))).toList)
+    Headers(unlift(getDeviceSecret).map(secret => Authorization(Credentials.Token(AuthScheme.Bearer, secret))).toList)
   }
 
   private val httpConfig    = headers.map(headers => HttpRequestConfig(headers = headers))

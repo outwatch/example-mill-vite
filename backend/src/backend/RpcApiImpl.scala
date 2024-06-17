@@ -27,7 +27,7 @@ import scala.util.Failure
 class RpcApiImpl(request: Request[IO]) extends rpc.RpcApi {
 
   val headers: Option[Authorization] = request.headers.get[Authorization]
-  val deviceId: Option[String]       = headers.collect { case Authorization(Credentials.Token(AuthScheme.Bearer, token)) => token }
+  val deviceSecret: Option[String]   = headers.collect { case Authorization(Credentials.Token(AuthScheme.Bearer, secret)) => secret }
   println(request.headers)
 
   // Authn integration
@@ -57,7 +57,7 @@ class RpcApiImpl(request: Request[IO]) extends rpc.RpcApi {
   def withDevice[T](code: db.DeviceProfile => IO[T]): IO[T] = deviceId match {
     case Some(deviceId) =>
       magnum.connect(ds) {
-        db.DeviceProfileRepo.findById(deviceId)
+        db.DeviceProfileRepo.findById(deviceAddress)
       } match {
         case Some(profile) => code(profile)
         case None          => IO.raiseError(Exception("403 Unauthorized"))
@@ -66,8 +66,9 @@ class RpcApiImpl(request: Request[IO]) extends rpc.RpcApi {
     case None => IO.raiseError(Exception("403 Unauthorized"))
   }
 
-  def registerDevice(deviceId: String): IO[Unit] = IO {
+  def registerDevice(deviceSecret: String): IO[Unit] = IO {
     magnum.connect(ds) {
+      ???
       sql"insert into ${db.DeviceProfile.Table}(${db.DeviceProfile.Table.all}) values (${db.DeviceProfile.Creator(
           deviceId = deviceId,
           publicDeviceId = "p-" + generateSecureKey(10),
