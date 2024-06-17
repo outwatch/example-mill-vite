@@ -1,4 +1,5 @@
 import { defineConfig, Plugin } from 'vite';
+import basicSsl from '@vitejs/plugin-basic-ssl'
 
 const isProd = process.env.NODE_ENV == "production";
 
@@ -6,6 +7,9 @@ const isProd = process.env.NODE_ENV == "production";
 // TODO: in prod, leave it untouched, so the backend can patch it
 
 export default defineConfig({
+  plugins: [
+    basicSsl() // generate cert for https: true
+  ],
   resolve: {
     alias: [
       {
@@ -16,6 +20,7 @@ export default defineConfig({
     ]
   },
   server: {
+    https: true,
     proxy: {
       // to avoid CORS issues, proxy the requests to the backend
       '/RpcApi/': 'http://localhost:8081',
