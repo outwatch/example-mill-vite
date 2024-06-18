@@ -6,12 +6,12 @@ import org.http4s.headers.Authorization
 import org.http4s.AuthScheme
 import org.http4s.Credentials
 import cats.implicits.*
-import org.sqlite.SQLiteDataSource
 import com.augustnagro.magnum
 import com.augustnagro.magnum.*
 import io.github.arainko.ducktape.*
 import rpc.generateSecureDeviceAddress
 import backend.db.LocationRepo
+import javax.sql.DataSource
 // import org.http4s.ember.client.EmberClientBuilder
 // import cats.effect.unsafe.implicits.global // TODO
 // import scala.util.control.NonFatal
@@ -22,11 +22,10 @@ import backend.db.LocationRepo
 // import authn.backend.AuthnClientConfig
 // import authn.backend.AccountImport
 
-class RpcApiImpl(request: Request[IO]) extends rpc.RpcApi {
+class RpcApiImpl(ds: DataSource, request: Request[IO]) extends rpc.RpcApi {
 
   val headers: Option[Authorization] = request.headers.get[Authorization]
   val deviceSecret: Option[String]   = headers.collect { case Authorization(Credentials.Token(AuthScheme.Bearer, secret)) => secret }
-  println(request.headers)
 
   // Authn integration
   // val headers: Option[Authorization] = request.headers.get[Authorization]
@@ -49,8 +48,6 @@ class RpcApiImpl(request: Request[IO]) extends rpc.RpcApi {
   //   case None            => IO.raiseError(Exception("403 Unauthorized"))
   // }
   //
-
-  val ds = SQLiteDataSource().tap(_.setUrl("jdbc:sqlite:data.db")).tap(_.setEnforceForeignKeys(true)).tap(_.setLoadExtension(true))
 
   def withDevice[T](code: db.DeviceProfile => IO[T]): IO[T] = deviceSecret match {
     case Some(deviceSecret) =>

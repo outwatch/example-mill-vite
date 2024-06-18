@@ -33,6 +33,7 @@ docker-image:
   COPY +build/out.jar ./
   COPY --dir +build/dist ./
   ENV FRONTEND_DISTRIBUTION_PATH=dist
+  ENV JDBC_URL=jdbc:sqlite:/db/data.db
   CMD ["java", "-jar", "out.jar"]
   SAVE IMAGE app:latest
 

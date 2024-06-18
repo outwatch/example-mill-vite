@@ -1,15 +1,17 @@
 package backend
 
-import cats.data.{Kleisli, OptionT}
+import org.sqlite.SQLiteDataSource
 
 case class AppConfig(
-  // authnUrl: String,
-  frontendDistributionPath: String
-)
+  frontendDistributionPath: String,
+  jdbcUrl: String,
+) {
+  val dataSource = SQLiteDataSource().tap(_.setUrl(jdbcUrl)).tap(_.setEnforceForeignKeys(true))
+}
 
 object AppConfig {
   def fromEnv(): AppConfig = AppConfig(
-    // authnUrl = sys.env("AUTHN_URL"),
-    frontendDistributionPath = sys.env("FRONTEND_DISTRIBUTION_PATH")
+    frontendDistributionPath = sys.env("FRONTEND_DISTRIBUTION_PATH"),
+    jdbcUrl = sys.env("JDBC_URL"),
   )
 }

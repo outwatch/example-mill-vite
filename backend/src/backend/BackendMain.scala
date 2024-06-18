@@ -4,8 +4,6 @@ import cats.effect.{IO, IOApp}
 import cps.*
 import cps.monads.catsEffect.{*, given}
 
-val jdbcUrl = "jdbc:sqlite:data.db?foreign_keys=ON"
-
 object BackendMain extends IOApp.Simple {
   val minimumLevel = Option(System.getenv("LOG_LEVEL"))
   scribe.Logger.system.installJUL()
@@ -15,7 +13,7 @@ object BackendMain extends IOApp.Simple {
     println("backend started.")
     val appConfig = AppConfig.fromEnv()
     println("migrating")
-    await(DbMigrations.migrate(jdbcUrl))
+    await(DbMigrations.migrate(appConfig.dataSource))
 
 //    Woo.runQueryBench()
 

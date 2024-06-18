@@ -17,23 +17,20 @@ import sloth.ext.http4s.server.HttpRpcRoutes
 import scala.concurrent.duration.DurationInt
 
 object HttpServer {
-  def errorHandler(t: Throwable, msg: => String): OptionT[IO, Unit] =
-    OptionT.liftF(IO.println(msg) >> IO.println(t) >> IO(t.printStackTrace()))
-
   def start(config: AppConfig): IO[Unit] = asyncScope[IO] {
     val routes =
-      ServerRoutes.rpcRoutes() <+>
+      ServerRoutes.rpcRoutes(config) <+>
         ServerRoutes.fileRoutes(config)
-//        infoRoutes(state) <+>
 
-    val loggedRoutes = Logger.httpApp(logHeaders = true, logBody = false)(
-      ErrorAction
-        .log(
-          routes,
-          messageFailureLogAction = errorHandler,
-          serviceErrorLogAction = errorHandler,
-        )
-        .orNotFound
+    def errorHandler(t: Throwable, msg: => String): IO[Unit] =
+      IO.println(msg) >> IO.println(t) >> IO(t.printStackTrace())
+
+    val loggedRoutes = Logger.httpApp(logHeaders = false, logBody = false)(
+      ErrorAction.log(
+        routes.orNotFound,
+        messageFailureLogAction = errorHandler,
+        serviceErrorLogAction = errorHandler,
+      )
     )
 
     val _ = await(
@@ -50,30 +47,13 @@ object HttpServer {
   }
 }
 
-object ServerRoutes {
-  private val dsl = Http4sDsl[IO]
-  def rpcRoutes(): HttpRoutes[IO] = {
+private object ServerRoutes {
+  def rpcRoutes(config: AppConfig): HttpRoutes[IO] = {
     import chameleon.ext.upickle.*
     HttpRpcRoutes.withRequest[String, IO] { (request: Request[IO]) =>
-      sloth.Router[String, IO].route[rpc.RpcApi](RpcApiImpl(request))
+      sloth.Router[String, IO].route[rpc.RpcApi](RpcApiImpl(config.dataSource, request))
     }
   }
-
-  // def slothRpcRoutes(): HttpRoutes[IO] = {
-  //   import sloth.{Router, ServerFailure}
-  //
-  //
-  //   // implement generic http route to call the sloth router
-  //   HttpRoutes.of[IO] { case request @ _ -> Root / apiName / methodName =>
-  //     request.as[String].flatMap { payload =>
-  //       val requestPath = List(apiName, methodName)
-  //       slothRouter(sloth.Request(requestPath, payload)) match {
-  //         case Left(error)     => InternalServerError(error.toString) // TODO: print errror instead of returning
-  //         case Right(response) => Ok(response)
-  //       }
-  //     }
-  //   }
-  // }
 
   def fileRoutes(config: AppConfig): HttpRoutes[IO] = {
     fileService[IO](
@@ -83,20 +63,4 @@ object ServerRoutes {
       )
     )
   }
-
-  // private def infoRoutes(state: ServerState): HttpRoutes[IO] = {
-  //   def appConfig = AppConfig(
-  //     authnUrl = state.config.authnIssuerUrl
-  //   )
-  //
-  //   HttpRoutes.of[IO] {
-  //     case GET -> Root / "info" / "version"         => Ok("TODO")
-  //     case GET -> Root / "info" / "app_config.json" => Ok(appConfig)
-  //     case GET -> Root / "info" / "app_config.js" =>
-  //       val code =
-  //         s"window.${AppConfig.domWindowProperty} = ${writeToString(appConfig)};"
-  //       Ok(code, `Content-Type`(MediaType.application.`javascript`))
-  //   }
-  // }
-
 }

@@ -1,4 +1,4 @@
-# fly.toml app configuration file generated for dropica on 2024-06-18T19:29:02+02:00
+# fly.toml app configuration file generated for dropica on 2024-06-18T22:32:08+02:00
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
@@ -7,6 +7,10 @@ app = 'dropica'
 primary_region = 'cdg'
 
 [build]
+
+[[mounts]]
+  source = 'db'
+  destination = '/db'
 
 [http_service]
   internal_port = 8081
