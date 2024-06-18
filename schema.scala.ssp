@@ -4,7 +4,6 @@ package backend.db
 
 import com.augustnagro.magnum.*
 import com.augustnagro.magnum.Spec as MSpec
-import scala.annotation.targetName
 
 #for (table <- schema.tables)
 
