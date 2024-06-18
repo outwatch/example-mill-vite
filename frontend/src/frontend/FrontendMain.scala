@@ -38,6 +38,7 @@ object Main extends IOApp.Simple {
           slTab("Messages", slotNav, panel := "messages"),
           slTab("Contacts", slotNav, panel := "contacts"),
           slTabPanel(name := "messages", messagesOnDevice(refreshTrigger), createMessage(refreshTrigger)),
+          messagesNearby(),
           slTabPanel(name := "contacts", addContact, showDeviceAddress),
         )
         // camera,
@@ -128,6 +129,13 @@ def addContact = {
   )
 }
 
+def messagesNearby() = div(
+  div("On the ground"),
+  RpcClient.call
+    .getMessagesAtLocation(rpc.Location.GCS(lat = 41.145556, lon = -73.995))
+    .map(_.map(message => div(message.content, button("pick up")))),
+)
+
 def messagesOnDevice(refreshTrigger: RxEvent[Unit]) = {
   import webcodegen.shoelace.SlButton.{value as _, *}
   import webcodegen.shoelace.SlSelect.{onSlFocus as _, onSlBlur as _, onSlAfterHide as _, open as _, *}
@@ -137,7 +145,7 @@ def messagesOnDevice(refreshTrigger: RxEvent[Unit]) = {
 
   val contacts = RxLater.effect(RpcClient.call.getContacts)
 
-  val onDeviceMessagesStream = refreshTrigger.observable.prepend(()).asEffect(RpcClient.call.getOnDeviceMessages)
+  val onDeviceMessagesStream = refreshTrigger.observable.prepend(()).asEffect(RpcClient.call.getMessagesOnDevice)
 
   val selectedProfile = VarLater[String]()
 

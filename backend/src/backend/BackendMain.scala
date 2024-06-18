@@ -12,7 +12,7 @@ object BackendMain extends IOApp.Simple {
   scribe.Logger.root.withMinimumLevel(minimumLevel.fold(scribe.Level.Info)(scribe.Level.apply)).replace()
 
   def run: IO[Unit] = async[IO] {
-    println("backend starting")
+    println("backend started.")
     val appConfig = AppConfig.fromEnv()
     // println("migrating")
     // await(DbMigrations.migrate(jdbcUrl))
