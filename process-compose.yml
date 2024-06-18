@@ -7,7 +7,7 @@ processes:
 
   mill-build:
     # initial mill build, so that vite finds the js files referenced in main.js
-    command: ./mill --color true frontend.fastLinkJS
+    command: mill --color true frontend.fastLinkJS
 
   vite-dev:
     command: bunx vite dev --port 5173 --strictPort
@@ -21,7 +21,7 @@ processes:
         condition: process_completed
 
   mill-watch:
-    command: ./mill --color true --watch "{backend.runBackground,frontend.fastLinkJS}"
+    command: mill --color true --watch "{backend.runBackground,frontend.fastLinkJS}"
     env:
       LOG_LEVEL:debug
     depends_on:

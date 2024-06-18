@@ -9,5 +9,5 @@ db:
   sqlite3 data.db
 
 gen-bsp:
-    ./mill mill.bsp.BSP/install
+    mill mill.bsp.BSP/install
 
