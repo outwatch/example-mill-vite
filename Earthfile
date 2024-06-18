@@ -28,7 +28,7 @@ build:
   SAVE ARTIFACT dist
 
 
-backend-image:
+docker-image:
   FROM ghcr.io/graalvm/jdk-community:22
   COPY +build/out.jar ./
   COPY --dir +build/dist ./
@@ -37,3 +37,19 @@ backend-image:
   SAVE IMAGE app:latest
 
 
+app-deploy:
+  # run locally:
+  # FLY_API_TOKEN=$(flyctl tokens create deploy) earthly --allow-privileged --secret FLY_API_TOKEN -i +app-deploy --COMMIT_SHA=<xxxxxx>
+  ARG --required COMMIT_SHA
+  ARG IMAGE="registry.fly.io/dropica:deployment-$COMMIT_SHA"
+  FROM earthly/dind:alpine-3.19-docker-25.0.5-r0
+  RUN apk add curl
+  RUN set -eo pipefail; curl -L https://fly.io/install.sh | sh
+  COPY fly.toml ./
+  WITH DOCKER --load $IMAGE=+docker-image
+    RUN --secret FLY_API_TOKEN \
+        docker image ls \
+     && /root/.fly/bin/flyctl auth docker \
+     && docker push $IMAGE \
+     && /root/.fly/bin/flyctl deploy --image $IMAGE --build-arg COMMIT_SHA=$COMMIT_SHA
+  END
