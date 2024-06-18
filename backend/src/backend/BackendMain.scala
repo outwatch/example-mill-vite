@@ -27,7 +27,7 @@ object BackendMain extends IOApp {
       await(DbMigrations.migrate(appConfig.dataSource))
     }
 
-    if (cliArgs(CliArg.HttpServer)) {
+    if (cliArgs.isEmpty || cliArgs(CliArg.HttpServer)) {
       println("starting http server")
       await(HttpServer.start(appConfig))
     }
