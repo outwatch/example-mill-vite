@@ -26,7 +26,7 @@ object HttpServer {
         ServerRoutes.fileRoutes(config)
 //        infoRoutes(state) <+>
 
-    val loggedRoutes = Logger.httpApp(logHeaders = true, logBody = true)(
+    val loggedRoutes = Logger.httpApp(logHeaders = true, logBody = false)(
       ErrorAction
         .log(
           routes,
