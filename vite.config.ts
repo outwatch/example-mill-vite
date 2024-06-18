@@ -8,7 +8,7 @@ const isProd = process.env.NODE_ENV == "production";
 
 export default defineConfig({
   plugins: [
-    basicSsl() // generate cert for https: true
+    // basicSsl() // generate cert for https: true
   ],
   resolve: {
     alias: [
@@ -20,7 +20,7 @@ export default defineConfig({
     ]
   },
   server: {
-    https: true,
+    // https: true,
     proxy: {
       // to avoid CORS issues, proxy the requests to the backend
       '/RpcApi/': 'http://localhost:8081',
