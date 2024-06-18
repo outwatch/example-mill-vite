@@ -6,7 +6,7 @@ import outwatch.*
 import outwatch.dsl.*
 import colibri.*
 import colibri.reactive.*
-import authn.frontend.*
+// import authn.frontend.*
 import org.scalajs.dom.window.localStorage
 import org.scalajs.dom
 import org.scalajs.dom.{window, Navigator, Position}
@@ -22,10 +22,12 @@ object Main extends IOApp.Simple {
     localStorage.setItem("deviceSecret", deviceSecret)
     unlift(RpcClient.call.registerDevice(deviceSecret))
 
-//    val positionObservable = Observable.create { observer =>
-//      val watchId = window.navigator.geolocation.watchPosition(position => observer.unsafeOnNext(position))
-//      Cancelable(() => window.navigator.geolocation.clearWatch(watchId))
-//    }
+    val positionObservable = Observable
+      .create[dom.Position] { observer =>
+        val watchId = window.navigator.geolocation.watchPosition(position => observer.unsafeOnNext(position))
+        Cancelable(() => window.navigator.geolocation.clearWatch(watchId))
+      }
+      .sampleMillis(5000)
 
     val refreshTrigger = VarEvent[Unit]()
 
@@ -34,13 +36,30 @@ object Main extends IOApp.Simple {
       import webcodegen.shoelace.SlTabGroup.*
       import webcodegen.shoelace.SlTabPanel.*
       div(
+        div(
+          "Location: ",
+          positionObservable.map(p =>
+            div(
+              table(
+                tr(td("time"), td(p.timestamp)),
+                tr(td("lat"), td(p.coords.latitude)),
+                tr(td("lon"), td(p.coords.longitude)),
+                // tr(td("acc"), td(p.coords.accuracy)),
+                // tr(td("alt"), td(p.coords.altitude)),
+                // tr(td("alt acc"), td(p.coords.altitudeAccuracy)),
+                // tr(td("heading"), td(p.coords.heading)),
+                // tr(td("speed"), td(p.coords.speed)),
+              )
+            )
+          ),
+        ),
         slTabGroup(
           slTab("Messages", slotNav, panel := "messages"),
           slTab("Contacts", slotNav, panel := "contacts"),
-          slTabPanel(name := "messages", messagesOnDevice(refreshTrigger), createMessage(refreshTrigger)),
-          messagesNearby(),
+          slTabPanel(name := "messages", messagesOnDevice(refreshTrigger, positionObservable), createMessage(refreshTrigger)),
+          messagesNearby(positionObservable),
           slTabPanel(name := "contacts", addContact, showDeviceAddress),
-        )
+        ),
         // camera,
       )
     }
@@ -129,14 +148,21 @@ def addContact = {
   )
 }
 
-def messagesNearby() = div(
+def messagesNearby(positionObservable: Observable[dom.Position]) = div(
   div("On the ground"),
-  RpcClient.call
-    .getMessagesAtLocation(rpc.Location.GCS(lat = 41.145556, lon = -73.995))
-    .map(_.map(message => div(message.content, button("pick up")))),
+  positionObservable.map { position =>
+    val rpcLocation: rpc.Location.GCS = rpc.Location.GCS(lat = position.coords.latitude, lon = position.coords.longitude)
+    RpcClient.call
+      .getMessagesAtLocation(rpcLocation)
+      .map(
+        _.map(message =>
+          div(message.content, button("pick up", onClick.doEffect(RpcClient.call.pickupMessage(message.messageId, rpcLocation).void)))
+        )
+      )
+  },
 )
 
-def messagesOnDevice(refreshTrigger: RxEvent[Unit]) = {
+def messagesOnDevice(refreshTrigger: RxEvent[Unit], positionObservable: Observable[dom.Position]) = {
   import webcodegen.shoelace.SlButton.{value as _, *}
   import webcodegen.shoelace.SlSelect.{onSlFocus as _, onSlBlur as _, onSlAfterHide as _, open as _, *}
   import webcodegen.shoelace.SlOption.{value as _, *}
@@ -155,7 +181,19 @@ def messagesOnDevice(refreshTrigger: RxEvent[Unit]) = {
       val openDialog = Var(false)
       div(
         display.flex,
-        div(message.content),
+        div(
+          message.content,
+          positionObservable.map(position =>
+            button(
+              "drop",
+              onClick.doEffect(
+                RpcClient.call
+                  .dropMessage(message.messageId, rpc.Location.GCS(lat = position.coords.latitude, lon = position.coords.longitude))
+                  .void
+              ),
+            )
+          ),
+        ),
         slButton("Send to device", onClick.as(true) --> openDialog),
         slDialog(
           open <-- openDialog,
