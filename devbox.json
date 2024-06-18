@@ -9,7 +9,11 @@
     "entr@latest",
     "earthly@latest",
     "curl@latest",
+    "flyctl@latest",
   ],
+  "shell": {
+    "init_hook": "export PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=true PLAYWRIGHT_BROWSERS_PATH=$(nix build --print-out-paths nixpkgs#playwright-driver.browsers)",
+  },
 }
 // this file supports comments
 // vim: set ft=jsonc:
