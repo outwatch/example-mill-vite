@@ -3,7 +3,7 @@ import mill._, scalalib._, scalajslib._
 import $repo.`https://oss.sonatype.org/content/repositories/snapshots`
 import $repo.`https://oss.sonatype.org/content/repositories/public`
 
-import $ivy.`com.github.cornerman::mill-db-codegen:0.4.2+0-0ab76091+20240618-1615-SNAPSHOT`, dbcodegen.plugin._
+import $ivy.`com.github.cornerman::mill-db-codegen:0.5.0`, dbcodegen.plugin._
 import $ivy.`com.github.cornerman::mill-web-components-codegen:0.1.1`, webcodegen.plugin._
 
 import mill.scalajslib._

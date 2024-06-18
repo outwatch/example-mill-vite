@@ -7,6 +7,8 @@
     "bun@latest",
     "sqlite-interactive@latest",
     "entr@latest",
+    "earthly@latest",
+    "curl@latest",
   ],
 }
 // this file supports comments

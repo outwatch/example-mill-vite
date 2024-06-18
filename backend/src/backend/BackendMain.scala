@@ -14,8 +14,8 @@ object BackendMain extends IOApp.Simple {
   def run: IO[Unit] = async[IO] {
     println("backend started.")
     val appConfig = AppConfig.fromEnv()
-    // println("migrating")
-    // await(DbMigrations.migrate(jdbcUrl))
+    println("migrating")
+    await(DbMigrations.migrate(jdbcUrl))
 
 //    Woo.runQueryBench()
 
