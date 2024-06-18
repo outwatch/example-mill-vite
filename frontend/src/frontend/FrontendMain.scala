@@ -27,7 +27,7 @@ object Main extends IOApp.Simple {
         val watchId = window.navigator.geolocation.watchPosition(position => observer.unsafeOnNext(position))
         Cancelable(() => window.navigator.geolocation.clearWatch(watchId))
       }
-      .sampleMillis(5000)
+      .sampleMillis(2000)
 
     val refreshTrigger = VarEvent[Unit]()
 
